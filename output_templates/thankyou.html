@@ -1,0 +1,102 @@
+{% from "_partials.html" import head_assets, header, banner, footer with context %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ ty.heading or 'Thank you' }} | {{ lp.page_title or campaign_name }}</title>
+  <meta name="robots" content="noindex">
+  {% if ty.manual_css %}<style>{{ ty.manual_css | safe }}</style>{% endif %}
+{{ head_assets() }}
+</head>
+<body class="ty-page">
+{{ header() }}
+{{ banner(slim=True) }}
+
+<main class="container ty-wrap">
+  <div class="ty-card">
+    <div class="ty-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="36" height="36"><path fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+    </div>
+    <h1>{{ ty.heading or 'Thank you!' }}</h1>
+    <div class="rich">{{ ty.body | content }}</div>
+    {% if files.pdf %}
+    <a id="pdf-link" class="btn" href="assets/{{ files.pdf }}" download="{{ files.pdf }}" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" style="vertical-align:-3px;margin-right:6px"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 20h14"/></svg>{{ ty.download_text or 'Download the PDF' }}
+    </a>
+    <p class="ty-note" id="ty-note">Your download will start automatically. If it doesn't, click the button above.</p>
+    {% endif %}
+    {% if company.website %}<p class="ty-back"><a href="{{ company.website }}" target="_blank" rel="noopener">Visit {{ company.name or 'our website' }} &rarr;</a></p>{% endif %}
+  </div>
+</main>
+
+{{ footer() }}
+{% if ty.manual_js %}<script>{{ ty.manual_js | safe }}</script>{% endif %}
+<script>
+  (function () {
+    function normalizeToken(value) {
+      return (value || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+    }
+
+    function applySubmittedValues() {
+      var params = new URLSearchParams(location.search);
+      var values = {};
+      params.forEach(function (value, key) {
+        if (key === 'submitted' || key === 'preview') return;
+        values[normalizeToken(key)] = value;
+      });
+
+      function replaceToken(match, token) {
+        var key = normalizeToken(token);
+        return Object.prototype.hasOwnProperty.call(values, key) ? values[key] : match;
+      }
+
+      var roots = [document.querySelector('h1'), document.querySelector('.rich'), document.getElementById('pdf-link'), document.getElementById('ty-note')];
+      roots.forEach(function (root) {
+        if (!root) return;
+        var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+        var textNode;
+        while ((textNode = walker.nextNode())) {
+          textNode.nodeValue = textNode.nodeValue.replace(/\[([^\]]+)\]/g, replaceToken);
+        }
+      });
+    }
+
+    applySubmittedValues();
+  })();
+</script>
+{% if files.pdf %}
+<script>
+  // Download the PDF as soon as the thank-you page opens.
+  (function () {
+    var link = document.getElementById('pdf-link');
+    if (new URLSearchParams(location.search).get('preview') === '1') return; // builder preview
+    var name = link.getAttribute('download');
+
+    function saveBlob(blob) {
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url; a.download = name; a.style.display = 'none';
+      document.body.appendChild(a); a.click();
+      setTimeout(function () { URL.revokeObjectURL(url); a.remove(); }, 4000);
+    }
+
+    function autoDownload() {
+      // fetch + blob forces a real download (not an inline PDF view) when served over http(s).
+      if (location.protocol.indexOf('http') === 0 && window.fetch) {
+        fetch(link.href).then(function (r) {
+          if (!r.ok) throw new Error(r.status);
+          return r.blob();
+        }).then(saveBlob).catch(function () { link.click(); });
+      } else {
+        link.click();
+      }
+      document.getElementById('ty-note').textContent = 'Your download has started. If it didn’t, click the button above.';
+    }
+
+    setTimeout(autoDownload, 500);
+  })();
+</script>
+{% endif %}
+</body>
+</html>

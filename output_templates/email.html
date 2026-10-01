@@ -1,0 +1,144 @@
+{% set e = email or {} %}
+{% set b = brand or {} %}
+{% set font = "Arial,Helvetica,sans-serif" %}
+{% set ft = b.footer_text_color or '#cbd5e1' %}
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="x-apple-disable-message-reformatting">
+  <title>{{ e.subject or campaign_name }}</title>
+  <!--[if mso]><noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript><![endif]-->
+  <style>
+    body { margin:0; padding:0; width:100% !important; -webkit-text-size-adjust:100%; -ms-text-size-adjust:100%; }
+    table { border-collapse:collapse; mso-table-lspace:0pt; mso-table-rspace:0pt; }
+    img { border:0; outline:none; text-decoration:none; -ms-interpolation-mode:bicubic; display:block; }
+    a { color:{{ primary }}; }
+    @media screen and (max-width:620px) {
+      .container { width:100% !important; }
+      .px { padding-left:20px !important; padding-right:20px !important; }
+      .logo-cell { display:block !important; width:100% !important; text-align:center !important; padding:6px 0 !important; }
+      .logo-cell img { margin:0 auto !important; }
+      .h1 { font-size:22px !important; line-height:30px !important; }
+    }
+  </style>
+</head>
+<body style="margin:0;padding:0;background-color:#f1f5f9;">
+  {% if e.preheader %}
+  <div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all;">{{ e.preheader }}&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;</div>
+  {% endif %}
+
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f1f5f9;">
+    <tr>
+      <td align="center" style="padding:24px 10px;">
+        {% if e.view_online_text != 'none' %}
+        <table role="presentation" class="container" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;">
+          <tr>
+            <td align="right" style="padding:0 4px 10px 4px;font-family:{{ font }};font-size:11px;color:#64748b;">
+              <a href="{{ lp_url }}" target="_blank" style="color:#64748b;text-decoration:underline;">{{ e.view_online_text or 'View landing page' }}</a>
+            </td>
+          </tr>
+        </table>
+        {% endif %}
+
+        <table role="presentation" class="container" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;background-color:#ffffff;border-radius:8px;overflow:hidden;">
+          <!-- Header: logo + partner logo -->
+          <tr>
+            <td class="px" style="padding:20px 32px;border-bottom:1px solid #e2e8f0;background-color:{{ layout.header_bg or '#ffffff' }};">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td class="logo-cell" align="left" valign="middle" style="width:50%;">
+                    {% if files.logo %}
+                    <a href="{{ company.website or lp_url }}" target="_blank"><img src="{{ img_base }}{{ files.logo }}" alt="{{ company.name or 'Logo' }}" height="44" style="height:44px;width:auto;max-width:200px;"></a>
+                    {% endif %}
+                  </td>
+                  <td class="logo-cell" align="right" valign="middle" style="width:50%;">
+                    {% if files.partner_logo %}
+                    <img src="{{ img_base }}{{ files.partner_logo }}" alt="{{ partner_name or 'Partner' }}" height="40" style="height:40px;width:auto;max-width:200px;margin-left:auto;">
+                    {% endif %}
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          {% if files.banner %}
+          <!-- Banner -->
+          <tr>
+            <td>
+              <a href="{{ lp_url }}" target="_blank"><img src="{{ img_base }}{{ files.banner }}" alt="{{ e.headline or lp.headline or campaign_name }}" width="600" style="width:100%;max-width:600px;height:auto;"></a>
+            </td>
+          </tr>
+          {% endif %}
+
+          <!-- Body -->
+          <tr>
+            <td class="px" style="padding:32px 40px 8px 40px;">
+              {% if e.headline %}
+              <h1 class="h1" style="margin:0 0 18px 0;font-family:{{ font }};font-size:26px;line-height:34px;color:#0f172a;font-weight:bold;">{{ e.headline }}</h1>
+              {% endif %}
+              {% if e.greeting %}
+              <p style="margin:0 0 16px 0;font-family:{{ font }};font-size:15px;line-height:24px;color:#333333;">{{ e.greeting }}</p>
+              {% endif %}
+              {{ e.body | content(email=True, primary=primary, btn_text=btn_text, lp_url=lp_url) }}
+            </td>
+          </tr>
+
+          <!-- CTA button (bulletproof, incl. Outlook VML) -->
+          <tr>
+            <td align="center" class="px" style="padding:8px 40px 28px 40px;">
+              <!--[if mso]>
+              <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{ lp_url }}" style="height:48px;v-text-anchor:middle;width:280px;" arcsize="12%" stroke="f" fillcolor="{{ primary }}">
+                <w:anchorlock/>
+                <center style="color:{{ btn_text }};font-family:Arial,sans-serif;font-size:16px;font-weight:bold;">{{ e.cta_text or 'Download Now' }}</center>
+              </v:roundrect>
+              <![endif]-->
+              <!--[if !mso]><!-- -->
+              <a href="{{ lp_url }}" target="_blank" style="display:inline-block;background-color:{{ primary }};color:{{ btn_text }};font-family:{{ font }};font-size:16px;font-weight:bold;line-height:48px;text-align:center;text-decoration:none;padding:0 36px;border-radius:6px;-webkit-text-size-adjust:none;">{{ e.cta_text or 'Download Now' }}</a>
+              <!--<![endif]-->
+            </td>
+          </tr>
+
+          {% if e.signoff %}
+          <tr>
+            <td class="px" style="padding:0 40px 32px 40px;font-family:{{ font }};font-size:15px;line-height:24px;color:#333333;">
+              {% for line in e.signoff.splitlines() %}{{ line }}{% if not loop.last %}<br>{% endif %}{% endfor %}
+            </td>
+          </tr>
+          {% endif %}
+
+          <!-- Footer -->
+          <tr>
+            <td class="px" style="padding:24px 40px;background-color:{{ b.footer_bg or '#0f172a' }};font-family:{{ font }};font-size:12px;line-height:19px;color:{{ ft }};" align="center">
+              {% if company.name %}<p style="margin:0 0 6px 0;font-weight:bold;color:{{ ft }};font-size:13px;">{{ company.name }}</p>{% endif %}
+              {% if company.address %}<p style="margin:0 0 8px 0;">{{ company.address | replace('\n', ', ') }}</p>{% endif %}
+              {% if company.phone or company.email %}
+              <p style="margin:0 0 10px 0;">
+                {% if company.phone %}<a href="tel:{{ company.phone | replace(' ', '') }}" style="color:{{ ft }};text-decoration:none;">{{ company.phone }}</a>{% endif %}
+                {% if company.phone and company.email %} &nbsp;|&nbsp; {% endif %}
+                {% if company.email %}<a href="mailto:{{ company.email }}" style="color:{{ ft }};text-decoration:none;">{{ company.email }}</a>{% endif %}
+              </p>
+              {% endif %}
+              <p style="margin:0 0 10px 0;">
+                {% set links = [] %}
+                {% for key, label in [('website','Website'),('linkedin','LinkedIn'),('twitter','X / Twitter'),('facebook','Facebook'),('instagram','Instagram'),('youtube','YouTube'),('privacy_url','Privacy Policy')] %}
+                  {% if company[key] %}{% set _ = links.append((company[key], label)) %}{% endif %}
+                {% endfor %}
+                {% for url, label in links %}<a href="{{ url }}" target="_blank" style="color:{{ ft }};text-decoration:underline;">{{ label }}</a>{% if not loop.last %} &nbsp;&middot;&nbsp; {% endif %}{% endfor %}
+              </p>
+              {% if e.footer_note %}<p style="margin:0 0 10px 0;color:{{ ft }};">{{ e.footer_note }}</p>{% endif %}
+              <p style="margin:0;color:{{ ft }};">
+                {{ e.unsubscribe_text or "If you no longer wish to receive these emails, you can" }}
+                <a href="{{ e.unsubscribe_url or '#' }}" target="_blank" style="color:{{ ft }};text-decoration:underline;">unsubscribe here</a>.
+              </p>
+              {% if company.copyright %}<p style="margin:10px 0 0 0;color:{{ ft }};">{{ company.copyright }}</p>{% endif %}
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

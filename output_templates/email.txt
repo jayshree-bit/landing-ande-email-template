@@ -1,0 +1,26 @@
+{% set e = email or {} %}
+{{ e.subject or campaign_name }}
+{% if e.headline %}
+
+{{ e.headline }}
+{% endif %}
+{% if e.greeting %}
+
+{{ e.greeting }}
+{% endif %}
+
+{{ e.body | plain }}
+
+{{ e.cta_text or 'Download Now' }}: {{ lp_url }}
+{% if e.signoff %}
+
+{{ e.signoff }}
+{% endif %}
+
+--
+{{ company.name or '' }}
+{{ (company.address or '') | replace('\n', ', ') }}
+{% if company.website %}{{ company.website }}
+{% endif %}
+
+Unsubscribe: {{ e.unsubscribe_url or '#' }}

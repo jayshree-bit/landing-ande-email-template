@@ -1,0 +1,87 @@
+{% macro head_assets() %}
+  {% if google_font %}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family={{ google_font | replace(' ', '+') }}:wght@400;600;700&display=swap">
+  {% endif %}
+  <link rel="stylesheet" href="assets/style.css">
+{% endmacro %}
+
+{% macro header() %}
+{% set overlay = layout.header_style == 'overlay' %}
+<header class="site-header{{ ' overlay' if overlay }}{{ ' sticky' if layout.sticky }}" id="site-header">
+  <div class="container header-inner">
+    {% if files.logo %}
+    <a href="{{ company.website or '#' }}" target="_blank" rel="noopener" class="logo-link"><img src="assets/{{ files.logo }}" alt="{{ company.name or 'Logo' }}" class="logo"></a>
+    {% else %}<span></span>{% endif %}
+    {% if files.partner_logo %}
+    <div class="partner">
+      {% if partner_label %}<span class="partner-label">{{ partner_label }}</span>{% endif %}
+      <img src="assets/{{ files.partner_logo }}" alt="{{ partner_name or 'Partner' }}" class="partner-logo">
+    </div>
+    {% endif %}
+  </div>
+</header>
+{% if layout.sticky %}
+<script>
+  // Give the sticky header a background once the page scrolls (needed for the transparent header).
+  (function () {
+    var h = document.getElementById('site-header');
+    function onScroll() { h.classList.toggle('scrolled', window.scrollY > 10); }
+    window.addEventListener('scroll', onScroll, { passive: true }); onScroll();
+  })();
+</script>
+{% endif %}
+{% endmacro %}
+
+{% macro banner(slim=False) %}
+{% if files.banner %}
+{% set hero_eyebrow = layout.banner_eyebrow or lp.eyebrow %}
+{% set hero_headline = layout.banner_headline or lp.headline %}
+{% set hero_subheadline = layout.banner_subheadline or lp.subheadline %}
+{% set hero_button_text = layout.banner_button_text or '' %}
+{% set hero_button_url = layout.banner_button_url or '#form' %}
+<section class="banner{{ ' banner-slim' if slim }}{{ ' has-hero' if layout.hero_text and not slim }}">
+  <img src="assets/{{ files.banner }}" alt="{{ hero_headline or campaign_name }}">
+  {% if layout.hero_text and not slim and (hero_eyebrow or hero_headline or hero_subheadline or hero_button_text) %}
+  <div class="hero-overlay{{ ' shaded' if layout.hero_shade }}">
+    <div class="container">
+      <div class="hero-text">
+        {% if hero_eyebrow %}<p class="eyebrow">{{ hero_eyebrow }}</p>{% endif %}
+        {% if hero_headline %}<h1>{{ hero_headline }}</h1>{% endif %}
+        {% if hero_subheadline %}<p class="subheadline">{{ hero_subheadline }}</p>{% endif %}
+        {% if hero_button_text %}<a class="lp-btn hero-button" href="{{ hero_button_url }}"{% if hero_button_url.startswith('http://') or hero_button_url.startswith('https://') %} target="_blank" rel="noopener"{% endif %}>{{ hero_button_text }}</a>{% endif %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</section>
+{% endif %}
+{% endmacro %}
+
+{% macro footer() %}
+<footer class="site-footer">
+  <div class="container footer-inner">
+    <div class="footer-brand">
+      {% if files.logo %}<img src="assets/{{ files.logo }}" alt="{{ company.name or 'Logo' }}" class="footer-logo{{ ' boxed' if layout.footer_logo_bg == 'white' }}">{% endif %}
+      {% if company.address %}<p class="footer-address">{{ company.address | replace('\n', ', ') }}</p>{% endif %}
+      <p class="footer-contact">
+        {% if company.phone %}<a href="tel:{{ company.phone | replace(' ', '') }}">{{ company.phone }}</a>{% endif %}
+        {% if company.phone and company.email %} &nbsp;|&nbsp; {% endif %}
+        {% if company.email %}<a href="mailto:{{ company.email }}">{{ company.email }}</a>{% endif %}
+      </p>
+    </div>
+    <div class="footer-links">
+      {% if company.website %}<a href="{{ company.website }}" target="_blank" rel="noopener">Website</a>{% endif %}
+      {% if company.privacy_url %}<a href="{{ company.privacy_url }}" target="_blank" rel="noopener">Privacy Policy</a>{% endif %}
+      {% if company.terms_url %}<a href="{{ company.terms_url }}" target="_blank" rel="noopener">Terms of Use</a>{% endif %}
+      {% for key, label in [('linkedin','LinkedIn'),('twitter','X / Twitter'),('facebook','Facebook'),('instagram','Instagram'),('youtube','YouTube')] %}
+        {% if company[key] %}<a href="{{ company[key] }}" target="_blank" rel="noopener">{{ label }}</a>{% endif %}
+      {% endfor %}
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <div class="container">{{ company.copyright or (('© ' ~ company.name) if company.name else '') }}</div>
+  </div>
+</footer>
+{% endmacro %}

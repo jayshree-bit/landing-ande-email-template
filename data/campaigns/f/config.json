@@ -1,0 +1,165 @@
+{
+  "slug": "f",
+  "campaign_name": "f",
+  "partner_name": "",
+  "partner_label": "",
+  "brand": {
+    "font": "",
+    "primary_color": "#0b5cff",
+    "button_text_color": "#ffffff",
+    "heading_color": "#0f172a",
+    "footer_bg": "#0f172a",
+    "footer_text_color": "#cbd5e1"
+  },
+  "layout": {
+    "header_style": "solid",
+    "header_bg": "#ffffff",
+    "logo_height": "48",
+    "partner_logo_height": "44",
+    "header_padding": "14",
+    "banner_height": "",
+    "sticky": false,
+    "hero_text": false,
+    "hero_text_color": "#ffffff",
+    "hero_shade": true,
+    "form_position": "right",
+    "footer_logo_bg": "white"
+  },
+  "lp": {
+    "page_title": "",
+    "eyebrow": "",
+    "headline": "",
+    "subheadline": "",
+    "meta_description": "",
+    "form_title": "Download the eBook",
+    "submit_text": "Download Now",
+    "form_intro": "",
+    "form_action": "",
+    "body": "",
+    "consent_text": "",
+    "fields": [
+      {
+        "label": "First Name",
+        "name": "first_name",
+        "type": "text",
+        "required": true,
+        "width": "half",
+        "placeholder": "",
+        "options": []
+      },
+      {
+        "label": "Last Name",
+        "name": "last_name",
+        "type": "text",
+        "required": true,
+        "width": "half",
+        "placeholder": "",
+        "options": []
+      },
+      {
+        "label": "Business Email",
+        "name": "business_email",
+        "type": "email",
+        "required": true,
+        "width": "full",
+        "placeholder": "",
+        "options": []
+      },
+      {
+        "label": "Phone Number",
+        "name": "phone_number",
+        "type": "tel",
+        "required": false,
+        "width": "half",
+        "placeholder": "",
+        "options": []
+      },
+      {
+        "label": "Company Name",
+        "name": "company_name",
+        "type": "text",
+        "required": true,
+        "width": "half",
+        "placeholder": "",
+        "options": []
+      },
+      {
+        "label": "Job Title",
+        "name": "job_title",
+        "type": "text",
+        "required": true,
+        "width": "half",
+        "placeholder": "",
+        "options": []
+      },
+      {
+        "label": "Country",
+        "name": "country",
+        "type": "select",
+        "required": true,
+        "width": "half",
+        "placeholder": "",
+        "options": [
+          "India",
+          "United States",
+          "United Kingdom",
+          "Canada",
+          "Australia",
+          "Singapore",
+          "United Arab Emirates",
+          "Germany",
+          "Other"
+        ]
+      },
+      {
+        "label": "I agree to receive communications and accept the privacy policy.",
+        "name": "i_agree_to_receive_communications_and_accept_the_privacy_policy",
+        "type": "checkbox",
+        "required": true,
+        "width": "full",
+        "placeholder": "",
+        "options": []
+      }
+    ]
+  },
+  "ty": {
+    "heading": "Thank you!",
+    "download_text": "Download the PDF",
+    "body": ""
+  },
+  "email": {
+    "subject": "",
+    "preheader": "",
+    "headline": "",
+    "greeting": "",
+    "cta_text": "Download Now",
+    "cta_url": "",
+    "signoff": "",
+    "unsubscribe_url": "",
+    "footer_note": "",
+    "body": ""
+  },
+  "company": {
+    "name": "",
+    "website": "",
+    "address": "",
+    "phone": "",
+    "email": "",
+    "privacy_url": "",
+    "terms_url": "",
+    "linkedin": "",
+    "twitter": "",
+    "facebook": "",
+    "instagram": "",
+    "youtube": "",
+    "copyright": ""
+  },
+  "notify": {
+    "notify_email": "",
+    "send_confirmation": false
+  },
+  "public_base_url": "",
+  "created_at": "2026-10-01T19:18:20.339697+00:00",
+  "files": {},
+  "updated_at": "2026-10-01T19:18:20.339765+00:00"
+}
