@@ -60,24 +60,51 @@
 {% endmacro %}
 
 {% macro footer() %}
+{% set raw_footer_columns = layout.footer_columns if layout is defined and layout.footer_columns is defined else 3 %}
+{% set footer_columns = raw_footer_columns | int if raw_footer_columns not in [none, ''] else 3 %}
+{% set footer_columns = footer_columns if footer_columns in [1,2,3,4,5,6] else 3 %}
 <footer class="site-footer">
   <div class="container footer-inner">
-    <div class="footer-brand">
-      {% if files.logo %}<img src="assets/{{ files.logo }}" alt="{{ company.name or 'Logo' }}" class="footer-logo{{ ' boxed' if layout.footer_logo_bg == 'white' }}">{% endif %}
-      {% if company.address %}<p class="footer-address">{{ company.address | replace('\n', ', ') }}</p>{% endif %}
-      <p class="footer-contact">
-        {% if company.phone %}<a href="tel:{{ company.phone | replace(' ', '') }}">{{ company.phone }}</a>{% endif %}
-        {% if company.phone and company.email %} &nbsp;|&nbsp; {% endif %}
-        {% if company.email %}<a href="mailto:{{ company.email }}">{{ company.email }}</a>{% endif %}
-      </p>
-    </div>
-    <div class="footer-links">
-      {% if company.website %}<a href="{{ company.website }}" target="_blank" rel="noopener">Website</a>{% endif %}
-      {% if company.privacy_url %}<a href="{{ company.privacy_url }}" target="_blank" rel="noopener">Privacy Policy</a>{% endif %}
-      {% if company.terms_url %}<a href="{{ company.terms_url }}" target="_blank" rel="noopener">Terms of Use</a>{% endif %}
-      {% for key, label in [('linkedin','LinkedIn'),('twitter','X / Twitter'),('facebook','Facebook'),('instagram','Instagram'),('youtube','YouTube')] %}
-        {% if company[key] %}<a href="{{ company[key] }}" target="_blank" rel="noopener">{{ label }}</a>{% endif %}
-      {% endfor %}
+    <div class="footer-grid footer-grid-{{ footer_columns }}">
+      {% if files.logo or company.name or company.address or company.phone or company.email %}
+      <div class="footer-block">
+        {% if files.logo %}<img src="assets/{{ files.logo }}" alt="{{ company.name or 'Logo' }}" class="footer-logo{{ ' boxed' if layout.footer_logo_bg == 'white' }}">{% endif %}
+        {% if company.name %}<h4>{{ company.name }}</h4>{% endif %}
+        {% if company.address %}<p>{{ company.address | replace('\n', ', ') }}</p>{% endif %}
+        {% if company.phone %}<p><a href="tel:{{ company.phone | replace(' ', '') }}">{{ company.phone }}</a></p>{% endif %}
+        {% if company.email %}<p><a href="mailto:{{ company.email }}">{{ company.email }}</a></p>{% endif %}
+      </div>
+      {% endif %}
+
+      {% if company.website or company.privacy_url or company.terms_url %}
+      <div class="footer-block">
+        <h4>Quick links</h4>
+        <ul>
+          {% if company.website %}<li><a href="{{ company.website }}" target="_blank" rel="noopener">Website</a></li>{% endif %}
+          {% if company.privacy_url %}<li><a href="{{ company.privacy_url }}" target="_blank" rel="noopener">Privacy Policy</a></li>{% endif %}
+          {% if company.terms_url %}<li><a href="{{ company.terms_url }}" target="_blank" rel="noopener">Terms of Use</a></li>{% endif %}
+        </ul>
+      </div>
+      {% endif %}
+
+      {% if company.linkedin or company.twitter or company.facebook or company.instagram or company.youtube %}
+      <div class="footer-block">
+        <h4>Follow us</h4>
+        <ul>
+          {% for key, label in [('linkedin','LinkedIn'),('twitter','X / Twitter'),('facebook','Facebook'),('instagram','Instagram'),('youtube','YouTube')] %}
+            {% if company[key] %}<li><a href="{{ company[key] }}" target="_blank" rel="noopener">{{ label }}</a></li>{% endif %}
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+
+      {% if company.copyright or company.name %}
+      <div class="footer-block">
+        <h4>Company</h4>
+        {% if company.name %}<p>{{ company.name }}</p>{% endif %}
+        {% if company.copyright %}<p>{{ company.copyright }}</p>{% endif %}
+      </div>
+      {% endif %}
     </div>
   </div>
   <div class="footer-bottom">

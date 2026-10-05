@@ -177,6 +177,7 @@ LAYOUT_DEFAULTS = {
     "hero_text_color": "#ffffff",
     "hero_shade": True,
     "form_position": "right",
+    "footer_columns": 3,
     "footer_logo_bg": "white",
 }
 

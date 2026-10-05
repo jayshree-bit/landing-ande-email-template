@@ -55,6 +55,7 @@ class FormRenderingTests(unittest.TestCase):
                 "hero_text_color": "#ffffff",
                 "hero_shade": True,
                 "form_position": "right",
+                "footer_columns": 3,
                 "footer_logo_bg": "white",
             },
             brand={
@@ -67,13 +68,13 @@ class FormRenderingTests(unittest.TestCase):
             company={
                 "name": "Example Co",
                 "website": "https://example.com",
-                "address": "",
-                "phone": "",
-                "email": "",
+                "address": "42 Market Street\nLondon, UK",
+                "phone": "+44 20 1234 5678",
+                "email": "hello@example.com",
                 "privacy_url": "https://example.com/privacy",
-                "terms_url": "",
-                "linkedin": "",
-                "twitter": "",
+                "terms_url": "https://example.com/terms",
+                "linkedin": "https://linkedin.com/company/example",
+                "twitter": "https://x.com/example",
                 "facebook": "",
                 "instagram": "",
                 "youtube": "",
@@ -97,6 +98,10 @@ class FormRenderingTests(unittest.TestCase):
         self.assertIn('required', html)
         self.assertIn('.my-field', html)
         self.assertIn('custom-js-loaded', html)
+        self.assertIn('footer-grid footer-grid-3', html)
+        self.assertIn('Company', html)
+        self.assertIn('Quick links', html)
+        self.assertIn('Follow us', html)
 
         thank_you = gen.env.get_template("thankyou.html").render(
             campaign_name="Test Campaign",
