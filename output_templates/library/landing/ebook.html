@@ -1,0 +1,46 @@
+{# eBook showcase: asset cover next to the benefits, then content + form. #}
+<div data-lp-block="header"></div>
+<section class="t-eb-hero">
+  <div class="container lp-row t-eb-row">
+    <div class="lp-col t-eb-coverwrap">
+      <div class="t-eb-cover">
+        {% if files.banner %}<img src="assets/{{ files.banner }}" alt="{{ t.headline }}">{% endif %}
+        <div class="t-eb-cover-title">{{ t.headline }}</div>
+      </div>
+    </div>
+    <div class="lp-col">
+      <p class="eyebrow">{{ t.eyebrow }}</p>
+      <h1>{{ t.headline }}</h1>
+      <p class="t-eb-sub">{{ t.sub }}</p>
+      <ul class="t-eb-list">
+        {% for b in t.bullets[:4] %}<li>{{ b }}</li>{% endfor %}
+      </ul>
+      <a class="lp-btn" href="#form">Get your free copy</a>
+    </div>
+  </div>
+</section>
+<section class="lp-section t-eb-main">
+  <div class="container main-grid">
+    <div class="content">
+      <h2>Why download this guide?</h2>
+      <div class="rich">{{ lp.body | content if lp.body else ('<p>' ~ (t.intro | e) ~ '</p>') | safe }}</div>
+    </div>
+    <div data-lp-block="form"></div>
+  </div>
+</section>
+<div data-lp-block="footer"></div>
+<style>
+.t-eb-hero { background:linear-gradient(135deg, #f5f8ff 0%, #eef2ff 60%, #fdf4ff 100%); padding:64px 0; }
+.t-eb-row { align-items:center; gap:56px; }
+.t-eb-coverwrap { flex:0 0 360px !important; display:flex; justify-content:center; }
+.t-eb-cover { position:relative; width:300px; height:400px; border-radius:6px 14px 14px 6px; overflow:hidden; background:linear-gradient(160deg, var(--primary), #0f172a); box-shadow:22px 26px 50px rgba(15,23,42,.28), inset 8px 0 0 rgba(0,0,0,.18); transform:perspective(900px) rotateY(-12deg); }
+.t-eb-cover img { width:100%; height:100%; object-fit:cover; opacity:.55; }
+.t-eb-cover-title { position:absolute; left:26px; right:22px; bottom:28px; color:#fff; font-weight:800; font-size:24px; line-height:1.2; text-shadow:0 2px 12px rgba(0,0,0,.35); }
+.t-eb-hero h1 { color:var(--heading); font-size:clamp(30px, 3.8vw, 46px); line-height:1.12; margin:0 0 14px; }
+.t-eb-sub { color:var(--muted); font-size:18px; margin:0 0 18px; }
+.t-eb-list { padding:0; margin:0 0 24px; list-style:none; }
+.t-eb-list li { padding-left:28px; position:relative; margin-bottom:10px; }
+.t-eb-list li::before { content:"→"; position:absolute; left:0; color:var(--primary); font-weight:800; }
+.t-eb-main h2 { color:var(--heading); margin:0 0 14px; }
+@media (max-width:820px) { .t-eb-coverwrap { flex-basis:auto !important; } .t-eb-cover { width:240px; height:320px; transform:none; } }
+</style>

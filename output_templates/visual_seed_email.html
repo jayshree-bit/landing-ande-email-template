@@ -1,0 +1,18 @@
+{# Starting layout for the email in the visual editor: a 600px container of full-width table rows. #}
+{% set e = email or {} %}
+<div class="email-container" style="max-width:600px;margin:0 auto;background-color:#ffffff;border-radius:8px;overflow:hidden;font-family:Arial,Helvetica,sans-serif;">
+  <div data-lp-block="email-header"></div>
+  <div data-lp-block="email-banner"></div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td class="px" style="padding:32px 40px 8px 40px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:24px;color:#333333;">
+        {% if e.headline %}<h1 style="margin:0 0 18px 0;font-size:26px;line-height:34px;color:#0f172a;">{{ e.headline }}</h1>{% endif %}
+        {% if e.greeting %}<p style="margin:0 0 16px 0;">{{ e.greeting }}</p>{% endif %}
+        {{ (e.body | content(email=True, primary=primary, btn_text=btn_text, lp_url=lp_url)) or '<p style="margin:0 0 16px 0;">Write your email message here. Double-click to edit.</p>' | safe }}
+      </td>
+    </tr>
+  </table>
+  <div data-lp-block="email-cta"></div>
+  <div data-lp-block="email-signoff"></div>
+  <div data-lp-block="email-footer"></div>
+</div>

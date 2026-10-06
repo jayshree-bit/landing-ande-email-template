@@ -1,0 +1,43 @@
+{# Hero with form: full-width image hero, headline + checklist beside the form, numbered cards below. #}
+<div data-lp-block="header"></div>
+<section class="t-hf-hero"{% if files.banner %} style="background-image:linear-gradient(100deg, rgba(8,18,40,.9) 0%, rgba(8,18,40,.65) 55%, rgba(8,18,40,.3) 100%), url('assets/{{ files.banner }}');"{% endif %}>
+  <div class="container t-hf-grid">
+    <div class="t-hf-copy">
+      <p class="t-hf-eyebrow">{{ t.eyebrow }}</p>
+      <h1>{{ t.headline }}</h1>
+      <p class="t-hf-sub">{{ t.sub }}</p>
+      <ul class="t-hf-list">
+        {% for b in t.bullets[:3] %}<li>{{ b }}</li>{% endfor %}
+      </ul>
+    </div>
+    <div data-lp-block="form"></div>
+  </div>
+</section>
+<section class="lp-section t-hf-cards">
+  <div class="container">
+    <h2>What you'll learn</h2>
+    <div class="lp-row">
+      {% for b in t.bullets[:3] %}
+      <div class="lp-col"><div class="t-hf-card"><span class="t-hf-num">0{{ loop.index }}</span><h3>{{ b }}</h3></div></div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+<div data-lp-block="footer"></div>
+<style>
+.t-hf-hero { background-color:#0f172a; background-size:cover; background-position:center; color:#fff; padding:72px 0; }
+.t-hf-grid { display:grid; grid-template-columns:minmax(0, 1fr) 420px; gap:48px; align-items:center; }
+.t-hf-eyebrow { display:inline-block; background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.25); border-radius:20px; padding:4px 14px; font-size:13px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; margin:0 0 16px; }
+.t-hf-copy h1 { color:#fff; font-size:clamp(30px, 4vw, 48px); line-height:1.12; margin:0 0 16px; }
+.t-hf-sub { font-size:19px; color:#dbe4f3; margin:0 0 22px; max-width:560px; }
+.t-hf-list { list-style:none; padding:0; margin:0; }
+.t-hf-list li { position:relative; padding-left:32px; margin-bottom:12px; font-size:16px; color:#eef2f8; }
+.t-hf-list li::before { content:"✓"; position:absolute; left:0; top:0; width:22px; height:22px; border-radius:50%; background:var(--primary); color:#fff; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center; }
+.t-hf-hero .form-card { position:static; box-shadow:0 20px 50px rgba(0,0,0,.35); }
+.t-hf-cards { padding:64px 0; background:#f8fafc; }
+.t-hf-cards h2 { text-align:center; color:var(--heading); font-size:30px; margin:0 0 32px; }
+.t-hf-card { background:#fff; border:1px solid var(--line); border-radius:12px; padding:26px; height:100%; }
+.t-hf-num { display:inline-block; color:var(--primary); font-weight:800; font-size:28px; margin-bottom:10px; }
+.t-hf-card h3 { margin:0; font-size:18px; line-height:1.4; color:var(--heading); }
+@media (max-width:920px) { .t-hf-grid { grid-template-columns:1fr; } .t-hf-hero { padding:48px 0; } }
+</style>

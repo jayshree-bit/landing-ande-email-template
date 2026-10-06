@@ -1,0 +1,41 @@
+{# Email - Hero banner: banner, centred headline, button, benefits list. Inline styles only. #}
+{% set F = "font-family:Arial,Helvetica,sans-serif;" %}
+<div class="email-container" style="max-width:600px;margin:0 auto;background-color:#ffffff;border-radius:10px;overflow:hidden;">
+  <div data-lp-block="email-header"></div>
+  <div data-lp-block="email-banner"></div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td class="px" align="center" style="padding:36px 48px 8px;{{ F }}text-align:center;">
+        <p style="margin:0 0 10px;{{ F }}font-size:12px;font-weight:bold;letter-spacing:2px;text-transform:uppercase;color:{{ primary }};">{{ t.eyebrow }}</p>
+        <h1 style="margin:0 0 14px;{{ F }}font-size:28px;line-height:36px;color:#0f172a;">{{ t.email_headline }}</h1>
+        <p style="margin:0 0 22px;{{ F }}font-size:16px;line-height:26px;color:#475569;">{{ t.email_intro }}</p>
+      </td>
+    </tr>
+  </table>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td align="center" style="padding:4px 40px 30px;">
+        <a href="{{ lp_url }}" target="_blank" style="display:inline-block;background-color:{{ primary }};color:{{ btn_text }};{{ F }}font-size:16px;font-weight:bold;line-height:50px;text-decoration:none;padding:0 38px;border-radius:30px;">{{ t.email_cta }}</a>
+      </td>
+    </tr>
+  </table>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td class="px" style="padding:0 48px 30px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f8fafc;border-radius:10px;">
+          <tr><td style="padding:22px 24px 6px;{{ F }}font-size:15px;font-weight:bold;color:#0f172a;">Inside, you'll discover:</td></tr>
+          {% for b in t.bullets[:3] %}
+          <tr>
+            <td style="padding:8px 24px;{{ F }}font-size:15px;line-height:23px;color:#334155;">
+              <span style="display:inline-block;width:22px;height:22px;line-height:22px;border-radius:11px;background-color:{{ primary }};color:#ffffff;text-align:center;font-size:12px;font-weight:bold;margin-right:10px;">&#10003;</span>{{ b }}
+            </td>
+          </tr>
+          {% endfor %}
+          <tr><td style="height:16px;font-size:0;line-height:0;">&nbsp;</td></tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+  <div data-lp-block="email-signoff"></div>
+  <div data-lp-block="email-footer"></div>
+</div>

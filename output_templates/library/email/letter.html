@@ -1,0 +1,20 @@
+{# Email - Personal letter: plain, personal style with a text link. Inline styles only. #}
+{% set F = "font-family:Georgia,'Times New Roman',serif;" %}
+<div class="email-container" style="max-width:600px;margin:0 auto;background-color:#ffffff;border-radius:6px;overflow:hidden;">
+  <div data-lp-block="email-header"></div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td class="px" style="padding:34px 44px 10px;{{ F }}font-size:16px;line-height:27px;color:#1f2937;">
+        <p style="margin:0 0 16px;">{{ t.email_greeting }}</p>
+        <p style="margin:0 0 16px;">{{ t.email_intro }}</p>
+        <p style="margin:0 0 10px;">In this guide you'll find:</p>
+        <ul style="margin:0 0 18px;padding:0 0 0 22px;">
+          {% for b in t.bullets[:3] %}<li style="margin:0 0 6px;">{{ b }}</li>{% endfor %}
+        </ul>
+        <p style="margin:0 0 22px;"><a href="{{ lp_url }}" target="_blank" style="color:{{ primary }};font-weight:bold;text-decoration:underline;">{{ t.email_cta }} &rarr;</a></p>
+      </td>
+    </tr>
+  </table>
+  <div data-lp-block="email-signoff"></div>
+  <div data-lp-block="email-footer"></div>
+</div>

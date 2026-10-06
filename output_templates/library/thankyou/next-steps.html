@@ -1,0 +1,37 @@
+{# Next steps: thank-you card with the download on the left, what happens next on the right. #}
+<div data-lp-block="header"></div>
+<div data-lp-block="banner-slim"></div>
+<section class="lp-section t-ns">
+  <div class="container lp-row t-ns-row">
+    <div class="lp-col">
+      <div class="t-ns-card">
+        <div class="ty-icon"><svg viewBox="0 0 24 24" width="36" height="36"><path fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+        <h1>{{ t.ty_heading }}</h1>
+        <p>{{ t.ty_body }}</p>
+        <div data-lp-block="download"></div>
+      </div>
+    </div>
+    <div class="lp-col">
+      <h2>What happens next</h2>
+      <ol class="t-ns-steps">
+        <li><b>Read the guide</b><span>Your download has started. Keep it handy to share with your team.</span></li>
+        <li><b>Check your inbox</b><span>We'll send you a copy and related resources.</span></li>
+        <li><b>Talk to an expert</b><span>Have questions? {% if t.website %}<a href="{{ t.website }}" target="_blank" rel="noopener">Get in touch with {{ t.company }}</a>{% else %}Get in touch with our team{% endif %}.</span></li>
+      </ol>
+    </div>
+  </div>
+</section>
+<div data-lp-block="footer"></div>
+<style>
+.t-ns { padding:56px 0 72px; }
+.t-ns-row { gap:48px; align-items:flex-start; }
+.t-ns-card { background:#fff; border:1px solid var(--line); border-radius:var(--radius); box-shadow:0 10px 30px rgba(15,23,42,.08); padding:36px; text-align:center; }
+.t-ns-card h1 { color:var(--heading); margin:0 0 10px; font-size:30px; }
+.t-ns-card .btn { width:auto; min-width:240px; }
+.t-ns h2 { color:var(--heading); margin:6px 0 20px; font-size:24px; }
+.t-ns-steps { list-style:none; counter-reset:step; padding:0; margin:0; }
+.t-ns-steps li { counter-increment:step; position:relative; padding:0 0 22px 56px; display:flex; flex-direction:column; gap:4px; }
+.t-ns-steps li::before { content:counter(step); position:absolute; left:0; top:-2px; width:38px; height:38px; border-radius:50%; background:color-mix(in srgb, var(--primary) 12%, #fff); color:var(--primary); font-weight:800; display:grid; place-items:center; }
+.t-ns-steps b { color:var(--heading); font-size:17px; }
+.t-ns-steps span { color:var(--muted); }
+</style>

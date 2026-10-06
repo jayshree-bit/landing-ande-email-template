@@ -225,46 +225,34 @@ def normalise_fields(fields):
     return out
 
 
-def build(slug, public_base):
-    """Render the campaign into generated/<slug>/ and return the zip path."""
-    cfg = load_config(slug)
-    for section in ("brand", "layout", "lp", "ty", "email", "company", "notify"):
+def build_context(slug, public_base):
+    """Load the campaign and compute everything the templates need."""
+    return context_from_cfg(load_config(slug), slug, public_base)
+
+
+def context_from_cfg(cfg, slug, public_base):
+    for section in ("brand", "layout", "lp", "ty", "email", "company", "notify", "visual"):
         if not isinstance(cfg.get(section), dict):
             cfg[section] = {}
-    src =campaign_dir(slug) / "uploads"
     public_base = (cfg.get("public_base_url") or public_base or "").rstrip("/")
     hosted = f"{public_base}/c/{slug}" if public_base else ""
-
-    out = GENERATED / slug
-    if out.exists():
-        shutil.rmtree(out)
-    lp, em = out / "landing-page", out / "email-template"
-    (lp / "assets").mkdir(parents=True)
-    (em / "images").mkdir(parents=True)
-
     files = cfg.get("files", {})
-    for role, name in files.items():
-        if not (src / name).exists():
-            continue
-        shutil.copy(src / name, lp / "assets" / name)
-        if role != "pdf":
-            shutil.copy(src / name, em / "images" / name)
 
-    lp_cfg = cfg.setdefault("lp", {})
+    lp_cfg = cfg["lp"]
     lp_cfg["fields"] = normalise_fields(lp_cfg.get("fields"))
-    primary = cfg.get("brand", {}).get("primary_color") or "#0b5cff"
+    primary = cfg["brand"].get("primary_color") or "#0b5cff"
 
     form_action = lp_cfg.get("form_action") or (f"{public_base}/api/submit/{slug}" if public_base else "")
-    lp_url = cfg.get("email", {}).get("cta_url") or (f"{hosted}/landing-page/index.html" if hosted else "landing-page/index.html")
+    lp_url = cfg["email"].get("cta_url") or (f"{hosted}/landing-page/index.html" if hosted else "landing-page/index.html")
     img_base = f"{hosted}/email-template/images/" if hosted else "images/"
 
-    layout = {**LAYOUT_DEFAULTS, **{k: v for k, v in (cfg.get("layout") or {}).items() if v not in (None, "")}}
+    layout = {**LAYOUT_DEFAULTS, **{k: v for k, v in cfg["layout"].items() if v not in (None, "")}}
     if not files.get("banner"):
         layout["header_style"], layout["hero_text"] = "solid", False
-    font = (cfg.get("brand") or {}).get("font") or ""
+    font = cfg["brand"].get("font") or ""
     ctx = dict(cfg, files=files, primary=primary, form_action=form_action, lp_url=lp_url,
                img_base=img_base, hosted=hosted, layout=layout,
-               btn_text=(cfg.get("brand") or {}).get("button_text_color") or "#ffffff",
+               btn_text=cfg["brand"].get("button_text_color") or "#ffffff",
                font_family=f"'{font}', 'Segoe UI', Arial, sans-serif" if font else "",
                google_font=font if font in GOOGLE_FONTS else "")
     ctx["js_config"] = {
@@ -273,18 +261,398 @@ def build(slug, public_base):
         "campaign": slug,
         "submitText": lp_cfg.get("submit_text") or "Submit",
     }
+    ctx["t"] = template_text(cfg)
+    return cfg, ctx
 
-    def render(template, dest):
-        dest.write_text(env.get_template(template).render(**ctx), encoding="utf-8")
 
-    render("landing.html", lp / "index.html")
-    render("thankyou.html", lp / "thank-you.html")
+def build(slug, public_base):
+    """Render the campaign into generated/<slug>/ and return the zip path."""
+    cfg, ctx = build_context(slug, public_base)
+    src = campaign_dir(slug) / "uploads"
+
+    out = GENERATED / slug
+    if out.exists():
+        shutil.rmtree(out)
+    lp, em = out / "landing-page", out / "email-template"
+    (lp / "assets").mkdir(parents=True)
+    (em / "images").mkdir(parents=True)
+
+    for role, name in ctx["files"].items():
+        if not (src / name).exists():
+            continue
+        shutil.copy(src / name, lp / "assets" / name)
+        if role != "pdf":
+            shutil.copy(src / name, em / "images" / name)
+    if (src / "media").is_dir():  # images uploaded in the visual editor
+        shutil.copytree(src / "media", lp / "assets" / "media")
+        shutil.copytree(src / "media", em / "images" / "media")
+
+    def render(template, dest, **extra):
+        dest.write_text(env.get_template(template).render(**ctx, **extra), encoding="utf-8")
+
+    for page, template, dest in (("landing", "landing.html", "index.html"), ("thankyou", "thankyou.html", "thank-you.html")):
+        design = load_visual(slug, page) if cfg["visual"].get(page) else None
+        if design:
+            css = relative_urls(design.get("base_css", "") + "\n" + design.get("css", "") + custom_css(design), slug)
+            render(template, lp / dest, visual_body=Markup(visual_body(design["html"], slug, ctx)), visual_css=Markup(css),
+                   visual_js=Markup(design.get("custom_js") or ""),
+                   visual_fonts=sorted(f for f in GOOGLE_FONTS if f in css and f != ctx["google_font"]))
+        else:
+            render(template, lp / dest)
     render("style.css", lp / "assets" / "style.css")
     render("script.js", lp / "assets" / "script.js")
-    render("email.html", em / "email.html")
+    render("effects.js", lp / "assets" / "effects.js")
+
+    design = load_visual(slug, "email") if cfg["visual"].get("email") else None
+    if design:
+        body, css = email_visual(design, slug, ctx)
+        render("email_visual.html", em / "email.html", visual_body=Markup(body), visual_css=Markup(css))
+    else:
+        render("email.html", em / "email.html")
     render("email.txt", em / "email.txt")
 
     return make_zip(slug)
+
+
+# ---------------------------------------------------------------- visual (drag & drop) editor
+
+VISUAL_PAGES = ("landing", "thankyou", "email")
+MOBILE_MAX = 767
+# Placeholders the editor stores as <div data-lp-block="name"></div>; filled with live campaign markup at build time.
+BLOCK_RE = re.compile(r'<div([^>]*\sdata-lp-block="([a-z-]+)"[^>]*)>\s*</div>')
+
+
+def visual_path(slug, page):
+    return campaign_dir(slug) / "visual" / f"{page}.json"
+
+
+def load_visual(slug, page):
+    p = visual_path(slug, page)
+    return json.loads(p.read_text(encoding="utf-8")) if p.exists() else None
+
+
+def save_visual(slug, page, design):
+    p = visual_path(slug, page)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(json.dumps(design), encoding="utf-8")
+
+
+def custom_css(design):
+    """The page's hand-written CSS, plus its mobile-only CSS wrapped in a media query."""
+    css = design.get("custom_css") or ""
+    mobile = design.get("custom_mobile_css") or ""
+    if mobile.strip():
+        css += f"\n@media (max-width: {MOBILE_MAX}px) {{\n{mobile}\n}}"
+    return "\n" + css if css.strip() else ""
+
+
+def editor_urls(text, slug):
+    """Relative asset paths -> URLs the editor canvas can load."""
+    text = re.sub(r"""(["'(])assets/""", lambda m: f"{m.group(1)}/c/{slug}/landing-page/assets/", text)
+    return text
+
+
+def _sub_path(text, prefix, repl):
+    """Replace a site-relative path only where it starts a URL (after a quote or "("), never inside an absolute URL."""
+    return re.sub(r"""(["'(])""" + re.escape(prefix), lambda m: m.group(1) + repl, text)
+
+
+def relative_urls(text, slug):
+    """Editor URLs -> paths relative to the exported page."""
+    text = _sub_path(text, f"/c/{slug}/landing-page/assets/", "assets/")
+    return _sub_path(text, f"/media/{slug}/", "assets/media/")
+
+
+def email_urls(text, slug, ctx):
+    """Editor URLs -> URLs for the email (absolute when the portal has a public address)."""
+    base = ctx["img_base"]  # "<hosted>/email-template/images/" or "images/"
+    pdf = ctx["files"].get("pdf")
+    if pdf:  # the PDF lives with the landing page, not in the email's images folder
+        lp_assets = f"{ctx['hosted']}/landing-page/assets/" if ctx["hosted"] else "../landing-page/assets/"
+        text = _sub_path(text, f"/c/{slug}/landing-page/assets/{pdf}", lp_assets + pdf)
+    text = _sub_path(text, f"/c/{slug}/landing-page/assets/media/", f"{base}media/")
+    text = _sub_path(text, f"/c/{slug}/landing-page/assets/", base)
+    text = _sub_path(text, f"/c/{slug}/email-template/images/", base)
+    return _sub_path(text, f"/media/{slug}/", f"{base}media/")
+
+
+def render_blocks(ctx):
+    """HTML for each live placeholder block."""
+    parts = env.get_template("_partials.html").make_module(ctx)
+    form = env.get_template("_form.html").make_module(ctx)
+    mail = env.get_template("_email_parts.html").make_module(ctx)
+    return {
+        "header": str(parts.header()),
+        "banner": str(parts.banner()),
+        "banner-slim": str(parts.banner(slim=True)),
+        "footer": str(parts.footer()),
+        "form": str(form.lead_form()),
+        "download": str(form.pdf_download()),
+        "email-header": str(mail.email_header()),
+        "email-banner": str(mail.email_banner()),
+        "email-content": str(mail.email_body()),
+        "email-cta": str(mail.email_cta()),
+        "email-signoff": str(mail.email_signoff()),
+        "email-footer": str(mail.email_footer()),
+    }
+
+
+def fill_blocks(html_text, ctx):
+    html_text = re.sub(r"^\s*<body[^>]*>|</body>\s*$", "", html_text.strip())
+    blocks = render_blocks(ctx)
+    return BLOCK_RE.sub(lambda m: f"<div{m.group(1)}>{blocks.get(m.group(2), '')}</div>", html_text)
+
+
+def visual_body(html_text, slug, ctx):
+    return relative_urls(fill_blocks(html_text, ctx), slug)
+
+
+CSS_RULE_RE = re.compile(r"([^{}@]+)\{([^{}]*)\}")
+
+
+def inline_id_styles(html_text, css):
+    """Move '#id { ... }' rules onto the elements' style attributes (email clients ignore most <style>).
+
+    Returns the new HTML and the CSS that could not be inlined (classes, media queries...),
+    with media-query declarations marked !important so they still beat the inline styles."""
+    rest, media = [], []
+    i = 0
+    while i < len(css):  # split top-level rules from @media blocks
+        at = css.find("@media", i)
+        if at < 0:
+            rest.append(css[i:])
+            break
+        rest.append(css[i:at])
+        depth, j = 0, css.index("{", at)
+        for j in range(j, len(css)):
+            depth += css[j] == "{"
+            depth -= css[j] == "}"
+            if depth == 0:
+                break
+        media.append(css[at:j + 1])
+        i = j + 1
+
+    leftover = []
+    for sel, decl in CSS_RULE_RE.findall("".join(rest)):
+        sel, decl = sel.strip(), decl.strip().rstrip(";")
+        m = re.fullmatch(r"#([\w-]+)", sel)
+        if not m or not decl:
+            if decl:
+                leftover.append(f"{sel}{{{decl};}}")
+            continue
+        tag_re = re.compile(r'(<[a-zA-Z][^>]*\sid="%s")([^>]*?)(/?>)' % re.escape(m.group(1)))
+
+        def merge(t):
+            head, attrs, end = t.group(1), t.group(2), t.group(3)
+            sm = re.search(r'\sstyle="([^"]*)"', head + attrs)
+            if sm:
+                new = sm.group(0)[:-1].rstrip(";") + ";" + decl + '"'
+                return (head + attrs).replace(sm.group(0), new) + end
+            return head + attrs + f' style="{decl}"' + end
+        html_text = tag_re.sub(merge, html_text, count=1)
+
+    important = [re.sub(r"(?<!important)\s*;", " !important;", re.sub(r"([^;{}\s])\s*}", r"\1;}", m)) for m in media]
+    return html_text, "\n".join(leftover + important)
+
+
+def email_links(html_text, ctx):
+    """Email apps run no JavaScript: turn data-lp-link on any element into real <a> links."""
+    lp_url = ctx["lp_url"]
+    html_text = re.sub(r'href="#[^"]*"', f'href="{html.escape(lp_url)}"', html_text)
+    if "data-lp-link" not in html_text:
+        return html_text
+    from lxml import html as lxml_html
+
+    root = lxml_html.fragment_fromstring(html_text, create_parent="div")
+    for el in root.xpath("//*[@data-lp-link]"):
+        url = el.attrib.pop("data-lp-link")
+        el.attrib.pop("data-lp-target", None)
+        el.attrib.pop("role", None)
+        if url.startswith("#"):
+            url = lp_url
+        if el.tag == "a":
+            el.set("href", url)
+            continue
+        link = lxml_html.Element("a", href=url, target="_blank",
+                                 style="display:block;text-decoration:none;color:inherit;")
+        if el.tag == "img":  # wrap the image itself
+            parent = el.getparent()
+            link.tail, el.tail = el.tail, None
+            parent.replace(el, link)
+            link.append(el)
+        else:  # wrap the element's content so its box keeps its styles
+            link.text, el.text = el.text, None
+            for child in list(el):
+                link.append(child)
+            el.append(link)
+    inner = (root.text or "") + "".join(lxml_html.tostring(c, encoding="unicode") for c in root)
+    return inner
+
+
+def email_visual(design, slug, ctx):
+    css = design.get("base_css", "") + design.get("css", "") + custom_css(design)
+    html_text, leftover = inline_id_styles(fill_blocks(design["html"], ctx), css)
+    html_text = email_links(email_urls(html_text, slug, ctx), ctx)
+    return html_text, email_urls(leftover, slug, ctx)
+
+
+def block_previews(slug, public_base):
+    """Placeholder HTML for the editor canvas (absolute asset URLs)."""
+    _, ctx = build_context(slug, public_base)
+    ctx["img_base"] = f"/c/{slug}/email-template/images/"
+    return {k: editor_urls(v, slug) for k, v in render_blocks(ctx).items()}
+
+
+def visual_seed(slug, page, public_base):
+    """Starting layout for the editor, built from the campaign's current content."""
+    _, ctx = build_context(slug, public_base)
+    ctx["img_base"] = f"/c/{slug}/email-template/images/"
+    return editor_urls(env.get_template(f"visual_seed_{page}.html").render(**ctx), slug)
+
+
+# ---------------------------------------------------------------- ready-made designs
+
+TEMPLATE_LIBRARY = {
+    "landing": [
+        ("classic", "Classic split", "Banner on top, content on the left and the form on the right."),
+        ("hero-form", "Hero with form", "Full-width image hero with the headline and the form side by side."),
+        ("centered", "Centered minimal", "Clean, centred headline with the form in the middle of the page."),
+        ("dark", "Bold dark", "High-contrast dark design with a checklist and a call-to-action band."),
+        ("ebook", "eBook showcase", "Shows the asset cover next to the benefits, then the form."),
+    ],
+    "thankyou": [
+        ("classic", "Classic card", "A centred card with the download button."),
+        ("hero", "Success hero", "A full-width coloured thank-you message."),
+        ("next-steps", "Next steps", "Thank-you card plus what happens next."),
+    ],
+    "email": [
+        ("classic", "Classic", "Logos, banner, message, button and footer."),
+        ("hero", "Hero banner", "Big banner, centred headline, button and a benefits list."),
+        ("newsletter", "Newsletter", "Coloured title band and image + text rows."),
+        ("letter", "Personal letter", "Plain, personal-style email with a text link."),
+        ("dark", "Bold header", "Dark headline band with a highlight box."),
+    ],
+}
+
+DEFAULT_FIELDS = [
+    {"label": "First Name", "type": "text", "width": "half", "required": True},
+    {"label": "Last Name", "type": "text", "width": "half", "required": True},
+    {"label": "Business Email", "type": "email", "width": "full", "required": True},
+    {"label": "Phone Number", "type": "tel", "width": "half", "required": False},
+    {"label": "Company Name", "type": "text", "width": "half", "required": True},
+    {"label": "Job Title", "type": "text", "width": "half", "required": True},
+    {"label": "Country", "type": "select", "width": "half", "required": True,
+     "options": ["India", "United States", "United Kingdom", "Canada", "Australia", "Singapore", "United Arab Emirates", "Germany", "Other"]},
+]
+
+
+def library():
+    return {kind: [{"id": i, "name": n, "description": d} for i, n, d in items] for kind, items in TEMPLATE_LIBRARY.items()}
+
+
+def _paragraphs(text):
+    return [p.strip() for p in plain(text or "").split("\n\n") if p.strip() and not p.strip().startswith("- ")]
+
+
+def _bullets(text):
+    text = text or ""
+    if is_html(text):
+        items = [html.unescape(re.sub(r"<[^>]+>", "", li)).strip() for li in re.findall(r"<li[^>]*>(.*?)</li>", text, re.S)]
+    else:
+        items = [re.sub(r"^([-•*]|\d+[.)])\s+", "", l.strip()) for l in text.splitlines() if re.match(r"^\s*([-•*]|\d+[.)])\s+", l)]
+    return [i for i in items if i][:6]
+
+
+def template_text(cfg):
+    """Campaign text for the ready-made designs, with sample text wherever the campaign has none yet."""
+    lp, ty, em, co = cfg.get("lp") or {}, cfg.get("ty") or {}, cfg.get("email") or {}, cfg.get("company") or {}
+    bullets = _bullets(lp.get("body")) or [
+        "Proven strategies from industry experts",
+        "Practical steps you can apply today",
+        "Real-world examples and benchmarks",
+    ]
+    intro = (_paragraphs(lp.get("body")) or ["Find out how leading teams tackle this challenge, with clear guidance you can put to work straight away."])[0]
+    email_intro = (_paragraphs(em.get("body")) or [intro])[0]
+    return {
+        "eyebrow": lp.get("eyebrow") or "Free resource",
+        "headline": lp.get("headline") or cfg.get("campaign_name") or "Your headline goes here",
+        "sub": lp.get("subheadline") or "A short supporting line that explains why this resource is worth downloading.",
+        "intro": intro,
+        "bullets": bullets,
+        "cta": lp.get("submit_text") or "Download Now",
+        "ty_heading": ty.get("heading") or "Thank you!",
+        "ty_body": (_paragraphs(ty.get("body")) or ["Your download is on its way. We hope you find it useful."])[0],
+        "email_headline": em.get("headline") or lp.get("headline") or cfg.get("campaign_name") or "Your headline goes here",
+        "email_greeting": em.get("greeting") or "Hi there,",
+        "email_intro": email_intro,
+        "email_cta": em.get("cta_text") or "Download Now",
+        "company": co.get("name") or "Your Company",
+        "website": co.get("website") or "",
+    }
+
+
+def new_campaign_config(name, slug):
+    return {
+        "campaign_name": name, "slug": slug, "partner_name": "", "partner_label": "",
+        "brand": {"primary_color": "#0b5cff", "button_text_color": "#ffffff", "heading_color": "#0f172a", "footer_bg": "#0f172a"},
+        "layout": {},
+        "lp": {"form_title": "Download the eBook", "submit_text": "Download Now", "fields": normalise_fields(DEFAULT_FIELDS),
+               "consent_text": "I agree to receive communications and accept the privacy policy.", "consent_type": "checkbox"},
+        "ty": {"heading": "Thank you!", "download_text": "Download the PDF"},
+        "email": {"cta_text": "Download Now"},
+        "company": {}, "notify": {}, "files": {}, "visual": {},
+    }
+
+
+def demo_config():
+    cfg = new_campaign_config("Demo campaign", "demo")
+    cfg["partner_name"] = "Partner"
+    cfg["files"] = {"logo": "logo.svg", "partner_logo": "partner.svg", "banner": "banner.svg", "pdf": "guide.pdf"}
+    cfg["lp"].update({
+        "eyebrow": "Free eBook",
+        "headline": "Modernise your business with a secure cloud",
+        "subheadline": "A practical guide to simplifying IT, protecting data and helping teams work better together.",
+        "body": "<p>Find out how leading organisations cut costs and reduce risk by moving their content to one secure, intelligent platform.</p>"
+                "<ul><li>Centralise files and collaboration</li><li>Automate governance and compliance</li><li>Protect sensitive data everywhere</li></ul>",
+    })
+    cfg["ty"]["body"] = "<p>Your guide is downloading now. A copy has also been sent to your inbox.</p>"
+    cfg["email"].update({"subject": "Your free guide is ready", "greeting": "Hi there,",
+                         "body": "<p>Discover how leading organisations simplify IT and keep their data safe with one secure platform.</p>"})
+    cfg["company"] = {"name": "Your Company", "website": "https://example.com", "address": "1 Business Park, City",
+                      "email": "hello@example.com", "privacy_url": "https://example.com/privacy",
+                      "copyright": "© 2026 Your Company. All rights reserved."}
+    return cfg
+
+
+def demo_context():
+    _, ctx = context_from_cfg(demo_config(), "demo", "")
+    ctx["img_base"] = "assets/"
+    ctx["lp_url"] = "#"
+    return ctx
+
+
+DEMO_SVGS = {
+    "logo.svg": '<svg xmlns="http://www.w3.org/2000/svg" width="180" height="48" viewBox="0 0 180 48"><rect x="2" y="8" width="32" height="32" rx="8" fill="#0b5cff"/><path d="M11 24l6 6 11-12" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round"/><text x="44" y="32" font-family="Arial" font-size="22" font-weight="700" fill="#0f172a">YourBrand</text></svg>',
+    "partner.svg": '<svg xmlns="http://www.w3.org/2000/svg" width="150" height="40" viewBox="0 0 150 40"><circle cx="18" cy="20" r="14" fill="#f97316"/><text x="40" y="27" font-family="Arial" font-size="18" font-weight="700" fill="#334155">Partner</text></svg>',
+    "banner.svg": '<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="480" viewBox="0 0 1600 480"><defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#1e3a8a"/><stop offset=".55" stop-color="#2563eb"/><stop offset="1" stop-color="#22d3ee"/></linearGradient></defs><rect width="1600" height="480" fill="url(#g)"/><g fill="#fff" opacity=".12"><circle cx="1300" cy="120" r="220"/><circle cx="1450" cy="400" r="160"/><circle cx="200" cy="420" r="120"/></g><g stroke="#fff" stroke-opacity=".25" fill="none"><path d="M900 380 L1100 220 L1250 300 L1450 140"/><path d="M900 420 L1100 300 L1250 360 L1450 220"/></g></svg>',
+}
+
+
+def render_library(kind, tid, ctx):
+    """Render a ready-made design: returns (html, css). Images use paths relative to the page."""
+    if kind not in TEMPLATE_LIBRARY or tid not in {i for i, _, _ in TEMPLATE_LIBRARY[kind]}:
+        raise KeyError(f"{kind}/{tid}")
+    out = env.get_template(f"library/{kind}/{tid}.html").render(**ctx)
+    css = "\n".join(re.findall(r"<style[^>]*>(.*?)</style>", out, re.S))
+    return re.sub(r"<style[^>]*>.*?</style>", "", out, flags=re.S).strip(), css.strip()
+
+
+def library_for_editor(kind, tid, slug, public_base):
+    """A ready-made design rendered with the campaign's content, with URLs the editor canvas can load."""
+    _, ctx = build_context(slug, public_base)
+    ctx["img_base"] = f"/c/{slug}/email-template/images/"
+    body, css = render_library(kind, tid, ctx)
+    return editor_urls(body, slug), editor_urls(css, slug)
 
 
 ZIP_PARTS = {"landing": "landing-page", "email": "email-template"}

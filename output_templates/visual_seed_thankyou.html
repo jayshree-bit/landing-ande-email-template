@@ -1,0 +1,13 @@
+{# Starting layout for the thank-you page in the visual editor. #}
+<div data-lp-block="header"></div>
+<div data-lp-block="banner-slim"></div>
+<section class="container ty-wrap">
+  <div class="ty-card">
+    <div class="ty-icon"><svg viewBox="0 0 24 24" width="36" height="36"><path fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+    <h1>{{ ty.heading or 'Thank you!' }}</h1>
+    <div class="rich">{{ ty.body | content }}</div>
+    <div data-lp-block="download"></div>
+    {% if company.website %}<p class="ty-back"><a href="{{ company.website }}" target="_blank" rel="noopener">Visit {{ company.name or 'our website' }} &rarr;</a></p>{% endif %}
+  </div>
+</section>
+<div data-lp-block="footer"></div>

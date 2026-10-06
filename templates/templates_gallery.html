@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Design Templates</title>
+<style>
+  :root { --p:#2563eb; --ink:#0f172a; --line:#e2e8f0; --muted:#64748b; --bg:#f1f5f9; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:'Segoe UI',Roboto,Arial,sans-serif; background:var(--bg); color:var(--ink); font-size:14px; padding-bottom:110px; }
+  header.top { background:var(--ink); color:#fff; padding:14px 24px; display:flex; align-items:center; gap:16px; }
+  header.top a.back { color:#cbd5e1; text-decoration:none; font-size:13px; }
+  header.top h1 { font-size:18px; margin:0; flex:1; }
+  main { max-width:1320px; margin:0 auto; padding:24px; }
+  .intro { color:var(--muted); margin:0 0 18px; font-size:15px; }
+  .tabs { display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap; }
+  .tabs button { font:inherit; border:1px solid var(--line); background:#fff; padding:9px 16px; border-radius:22px; cursor:pointer; font-weight:600; }
+  .tabs button.active { background:var(--ink); color:#fff; border-color:var(--ink); }
+  .tabs button small { font-weight:400; opacity:.75; margin-left:4px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:20px; }
+  .card { background:#fff; border:2px solid var(--line); border-radius:14px; overflow:hidden; display:flex; flex-direction:column; transition:border-color .15s, box-shadow .15s; }
+  .card:hover { box-shadow:0 10px 28px rgba(15,23,42,.1); }
+  .card.selected { border-color:var(--p); box-shadow:0 0 0 3px rgba(37,99,235,.18); }
+  .thumb { position:relative; height:330px; overflow:hidden; background:#e2e8f0; cursor:pointer; }
+  .thumb iframe { position:absolute; top:0; left:0; border:0; pointer-events:none; transform-origin:0 0; background:#fff; }
+  .thumb .badge { position:absolute; top:10px; right:10px; background:var(--p); color:#fff; border-radius:20px; padding:4px 10px; font-size:12px; font-weight:700; display:none; }
+  .card.selected .badge { display:block; }
+  .body { padding:14px 16px 16px; display:flex; flex-direction:column; gap:6px; flex:1; }
+  .body h3 { margin:0; font-size:16px; }
+  .body p { margin:0; color:var(--muted); font-size:13px; flex:1; }
+  .actions { display:flex; gap:8px; margin-top:8px; }
+  .btn { font:inherit; border:0; background:var(--p); color:#fff; padding:9px 14px; border-radius:8px; font-weight:700; cursor:pointer; text-decoration:none; text-align:center; }
+  .btn.light { background:#fff; color:var(--ink); border:1px solid var(--line); font-weight:600; }
+  .btn[disabled] { opacity:.6; cursor:wait; }
+  .bar { position:fixed; left:0; right:0; bottom:0; background:#fff; border-top:1px solid var(--line); box-shadow:0 -6px 20px rgba(15,23,42,.08); padding:14px 24px; display:flex; gap:14px; align-items:center; flex-wrap:wrap; z-index:5; }
+  .bar .sel { flex:1; min-width:260px; color:var(--muted); font-size:13px; line-height:1.6; }
+  .bar .sel b { color:var(--ink); }
+  .bar input { font:inherit; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; min-width:260px; }
+  .err { color:#b91c1c; font-size:13px; }
+  .modal { position:fixed; inset:0; background:rgba(15,23,42,.6); display:none; z-index:20; padding:30px; }
+  .modal.open { display:flex; flex-direction:column; }
+  .modal-head { display:flex; align-items:center; gap:10px; color:#fff; margin-bottom:10px; }
+  .modal-head h2 { margin:0; font-size:16px; flex:1; }
+  .modal iframe { flex:1; width:100%; max-width:1280px; margin:0 auto; border:0; border-radius:10px; background:#fff; }
+  .modal.email iframe { max-width:720px; }
+</style>
+</head>
+<body>
+<header class="top">
+  <a class="back" href="/">&larr; All campaigns</a>
+  <h1>Design templates</h1>
+</header>
+<main>
+  <p class="intro">Pick a design for the landing page, the thank-you page and the email, then create your campaign. Previews use sample content; your logos, banner, form, PDF and footer fill in automatically once you add them in the campaign builder. Everything stays editable in the visual editor.</p>
+  <div class="tabs" id="tabs">
+    <button data-kind="landing" class="active">Landing page <small id="cnt-landing"></small></button>
+    <button data-kind="thankyou">Thank-you page <small id="cnt-thankyou"></small></button>
+    <button data-kind="email">Email <small id="cnt-email"></small></button>
+  </div>
+  <div class="grid" id="grid"></div>
+</main>
+
+<div class="bar">
+  <div class="sel" id="selSummary"></div>
+  <input id="name" placeholder="Campaign name, e.g. Cloud Security eBook Q4">
+  <button class="btn" id="create">Create campaign</button>
+  <span class="err" id="err"></span>
+</div>
+
+<div class="modal" id="modal">
+  <div class="modal-head"><h2 id="modalTitle"></h2><button class="btn" id="modalUse">Use this design</button><button class="btn light" id="modalClose">Close</button></div>
+  <iframe id="modalFrame" title="Template preview"></iframe>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const LABELS = { landing: 'Landing page', thankyou: 'Thank-you page', email: 'Email' };
+const WIDTH = { landing: 1280, thankyou: 1280, email: 680 };
+let LIB = {}, kind = 'landing', modalItem = null;
+const selected = { landing: 'classic', thankyou: 'classic', email: 'classic' };
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const previewUrl = (k, id) => `/templates/preview/${k}/${id}?preview=1`;
+
+function summary() {
+  $('#selSummary').innerHTML = Object.keys(LABELS).map(k => {
+    const item = (LIB[k] || []).find(i => i.id === selected[k]);
+    return `${LABELS[k]}: <b>${esc(item ? item.name : '—')}</b>`;
+  }).join(' &nbsp;·&nbsp; ');
+}
+
+function fitFrames() {
+  document.querySelectorAll('.thumb').forEach(t => {
+    const f = t.querySelector('iframe');
+    const w = WIDTH[t.dataset.kind];
+    const scale = t.clientWidth / w;
+    f.style.width = w + 'px';
+    f.style.height = Math.ceil(t.clientHeight / scale) + 'px';
+    f.style.transform = `scale(${scale})`;
+  });
+}
+
+function render() {
+  document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('active', b.dataset.kind === kind));
+  $('#grid').innerHTML = (LIB[kind] || []).map(i => `
+    <div class="card${selected[kind] === i.id ? ' selected' : ''}" data-id="${i.id}">
+      <div class="thumb" data-kind="${kind}" title="Click to preview">
+        <iframe loading="lazy" scrolling="no" src="${previewUrl(kind, i.id)}" tabindex="-1" title="${esc(i.name)}"></iframe>
+        <span class="badge">✓ Selected</span>
+      </div>
+      <div class="body">
+        <h3>${esc(i.name)}</h3>
+        <p>${esc(i.description)}</p>
+        <div class="actions">
+          <button class="btn use" type="button">${selected[kind] === i.id ? '✓ Selected' : 'Use this design'}</button>
+          <button class="btn light prev" type="button">Preview</button>
+        </div>
+      </div>
+    </div>`).join('');
+  document.querySelectorAll('.card').forEach(card => {
+    const item = LIB[kind].find(i => i.id === card.dataset.id);
+    card.querySelector('.use').onclick = () => choose(item.id);
+    card.querySelector('.prev').onclick = () => openModal(item);
+    card.querySelector('.thumb').onclick = () => openModal(item);
+  });
+  fitFrames();
+  summary();
+}
+
+function choose(id) {
+  selected[kind] = id;
+  render();
+}
+
+function openModal(item) {
+  modalItem = item;
+  $('#modalTitle').textContent = `${LABELS[kind]} · ${item.name}`;
+  $('#modalFrame').src = previewUrl(kind, item.id);
+  $('#modal').className = 'modal open' + (kind === 'email' ? ' email' : '');
+}
+$('#modalClose').onclick = () => { $('#modal').className = 'modal'; $('#modalFrame').src = 'about:blank'; };
+$('#modalUse').onclick = () => { choose(modalItem.id); $('#modalClose').onclick(); };
+document.addEventListener('keydown', e => { if (e.key === 'Escape') $('#modalClose').onclick(); });
+
+document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => { kind = b.dataset.kind; render(); });
+window.addEventListener('resize', fitFrames);
+
+$('#create').onclick = async () => {
+  const name = $('#name').value.trim();
+  $('#err').textContent = '';
+  if (!name) { $('#err').textContent = 'Enter a campaign name first.'; $('#name').focus(); return; }
+  const btn = $('#create'); btn.disabled = true; btn.textContent = 'Creating…';
+  try {
+    const r = await fetch('/api/campaigns/from-template', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, ...selected }) });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'Failed');
+    location.href = '/builder/' + d.slug;
+  } catch (e) {
+    $('#err').textContent = e.message;
+    btn.disabled = false; btn.textContent = 'Create campaign';
+  }
+};
+
+(async () => {
+  LIB = await (await fetch('/api/templates')).json();
+  Object.keys(LABELS).forEach(k => { $('#cnt-' + k).textContent = `(${(LIB[k] || []).length})`; });
+  render();
+})();
+</script>
+</body>
+</html>

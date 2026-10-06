@@ -1,0 +1,34 @@
+{# Email - Bold header: dark headline band with a button, then a highlight box. Inline styles only. #}
+{% set F = "font-family:Arial,Helvetica,sans-serif;" %}
+<div class="email-container" style="max-width:600px;margin:0 auto;background-color:#ffffff;border-radius:10px;overflow:hidden;">
+  <div data-lp-block="email-header"></div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td class="px" align="center" style="padding:44px 44px 40px;background-color:#0b1020;{{ F }}text-align:center;">
+        <p style="margin:0 0 12px;{{ F }}font-size:12px;font-weight:bold;letter-spacing:3px;text-transform:uppercase;color:#93c5fd;">{{ t.eyebrow }}</p>
+        <h1 style="margin:0 0 14px;{{ F }}font-size:30px;line-height:38px;color:#ffffff;">{{ t.email_headline }}</h1>
+        <p style="margin:0 0 26px;{{ F }}font-size:16px;line-height:25px;color:#cbd5e1;">{{ t.sub }}</p>
+        <a href="{{ lp_url }}" target="_blank" style="display:inline-block;background-color:{{ primary }};color:{{ btn_text }};{{ F }}font-size:16px;font-weight:bold;line-height:50px;text-decoration:none;padding:0 36px;border-radius:6px;">{{ t.email_cta }}</a>
+      </td>
+    </tr>
+  </table>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr><td class="px" style="padding:30px 40px 10px;{{ F }}font-size:15px;line-height:24px;color:#334155;"><p style="margin:0;">{{ t.email_greeting }}</p><p style="margin:12px 0 0;">{{ t.email_intro }}</p></td></tr>
+  </table>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td class="px" style="padding:14px 40px 30px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="border-left:4px solid {{ primary }};background-color:#f1f5f9;padding:18px 22px;{{ F }}font-size:15px;line-height:24px;color:#0f172a;">
+              <strong>Key takeaways</strong>
+              {% for b in t.bullets[:3] %}<br>&#8226;&nbsp; {{ b }}{% endfor %}
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+  <div data-lp-block="email-signoff"></div>
+  <div data-lp-block="email-footer"></div>
+</div>

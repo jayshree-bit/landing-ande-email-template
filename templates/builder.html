@@ -18,6 +18,7 @@
   .btn { background:var(--p); color:#fff; border:0; padding:9px 16px; border-radius:7px; font:inherit; font-weight:700; cursor:pointer; text-decoration:none; display:inline-block; }
   .btn.light { background:#fff; color:var(--ink); }
   .btn[disabled] { opacity:.6; cursor:wait; }
+  .disabled-link { opacity:.5; pointer-events:none; }
   .menu { position:relative; }
   .menu-list { display:none; position:absolute; right:0; top:110%; background:#fff; border:1px solid var(--line); border-radius:8px; box-shadow:0 8px 24px rgba(15,23,42,.18); min-width:210px; z-index:30; padding:4px; }
   .menu.open .menu-list { display:block; }
@@ -93,6 +94,15 @@
   .empty { margin:auto; color:var(--muted); text-align:center; padding:40px; }
   .msg { padding:10px 14px; border-radius:8px; font-size:13px; }
   .msg.err { background:#fef2f2; color:#b91c1c; border:1px solid #fecaca; }
+  .design-card { background:linear-gradient(135deg,#eef4ff,#f5f0ff); border:1px solid #d7e2ff; border-radius:10px; padding:14px 16px; display:flex; flex-direction:column; gap:10px; }
+  .design-card .dhead { display:flex; justify-content:space-between; align-items:center; font-weight:700; font-size:15px; }
+  .drow { display:grid; grid-template-columns:110px 1fr auto auto; gap:8px; align-items:center; background:#fff; border:1px solid var(--line); border-radius:8px; padding:8px 10px; }
+  .drow .mode { font-size:12px; color:var(--muted); }
+  .drow .mode b { color:#6d28d9; }
+  .btn-s { font:inherit; font-size:12.5px; padding:6px 10px; border-radius:6px; border:1px solid var(--line); background:#fff; color:var(--ink); cursor:pointer; text-decoration:none; white-space:nowrap; }
+  .btn-s.primary { background:#6d28d9; border-color:#6d28d9; color:#fff; }
+  .btn-s[disabled], .btn-s.disabled { opacity:.5; pointer-events:none; }
+  .design-card .hint2 { font-size:12px; color:var(--muted); margin:0; line-height:1.5; }
   @media (max-width:1050px) { .layout { grid-template-columns:1fr; } .panel { position:static; height:80vh; } }
 </style>
 </head>
@@ -102,6 +112,7 @@
   <h1 id="title">New campaign</h1>
   <span class="save-state" id="saveState"></span>
   <label class="auto" title="Saves and refreshes the preview automatically while you edit"><input type="checkbox" id="autoSave" checked> Auto-save</label>
+  <a class="btn light disabled-link" id="visualBtn" title="Drag & drop page editor (save the campaign first)">🎨 Visual editor</a>
   <button type="button" class="btn" id="genBtn">Save &amp; Generate</button>
   <span class="menu" id="dlMenu">
     <button type="button" class="btn light" id="dlBtn" disabled>Download ▾</button>
@@ -117,6 +128,14 @@
 <div class="layout">
   <form id="builder" autocomplete="off" onsubmit="return false">
     <div id="status"></div>
+
+    <div class="design-card" id="designCard">
+      <div class="dhead">Page design <span style="font-weight:400;font-size:12px;color:#64748b">drag &amp; drop like Elementor</span></div>
+      <div class="drow" data-page="landing"><b>Landing page</b><span class="mode"></span><a class="btn-s primary open">Open visual editor</a><button type="button" class="btn-s toggle"></button></div>
+      <div class="drow" data-page="thankyou"><b>Thank-you page</b><span class="mode"></span><a class="btn-s primary open">Open visual editor</a><button type="button" class="btn-s toggle"></button></div>
+      <div class="drow" data-page="email"><b>Email template</b><span class="mode"></span><a class="btn-s primary open">Open visual editor</a><button type="button" class="btn-s toggle"></button></div>
+      <p class="hint2">A page with a visual design ignores the content fields below for that page. The logos, banner, form fields, footer details and colours set here still update it automatically.</p>
+    </div>
 
     <details class="card" open>
       <summary>1. Campaign &amp; Brand</summary>
@@ -542,7 +561,35 @@ function collect() {
   return cfg;
 }
 
+/* ---------------- Visual editor status ---------------- */
+let designState = { visual: {}, visual_saved: {} };
+function renderDesign() {
+  $('#visualBtn').classList.toggle('disabled-link', !slug);
+  if (slug) $('#visualBtn').href = `/editor/${slug}/landing`;
+  $$('.drow').forEach(r => {
+    const page = r.dataset.page, on = !!designState.visual[page], saved = !!designState.visual_saved[page];
+    r.querySelector('.mode').innerHTML = !slug ? 'Save the campaign first'
+      : on ? 'Using its <b>visual design</b>' : saved ? 'Using the standard template (visual design saved)' : 'Using the standard template';
+    const open = r.querySelector('.open');
+    open.classList.toggle('disabled', !slug);
+    if (slug) open.href = `/editor/${slug}/${page}`;
+    const t = r.querySelector('.toggle');
+    t.textContent = on ? 'Use standard template' : 'Use visual design';
+    t.disabled = !slug || (!on && !saved);
+    t.onclick = async () => {
+      const res = await fetch(`/api/campaigns/${slug}/visual/${page}/mode`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ enabled: !on }) });
+      const d = await res.json();
+      if (!res.ok) { status(d.error || 'Failed'); return; }
+      designState.visual[page] = d.enabled;
+      renderDesign(); showPreview();
+    };
+  });
+}
+
 function populate(cfg) {
+  designState = { visual: cfg.visual || {}, visual_saved: cfg.visual_saved || {} };
+  renderDesign();
   loading = true;
   $$('[data-k]').forEach(el => {
     const v = getPath(cfg, el.dataset.k);
@@ -596,7 +643,7 @@ async function save() {
     if (!res.ok) throw new Error(data.error || 'Save failed');
     const isFirst = !slug;
     slug = data.slug;
-    if (isFirst) history.replaceState(null, '', '/builder/' + slug);
+    if (isFirst) { history.replaceState(null, '', '/builder/' + slug); renderDesign(); }
     Object.keys(removeFiles).forEach(k => delete removeFiles[k]);
     if ($$('.file-box input[type=file]').some(i => i.files.length) || $$('.file-box input[type=url]').some(i => i.value) || Object.keys(cfg.remove_files).length)
       showFiles(data.files);

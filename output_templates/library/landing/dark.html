@@ -1,0 +1,51 @@
+{# Bold dark: dark hero with checklist and form, feature strip, call-to-action band. #}
+<div data-lp-block="header"></div>
+<section class="t-dk-hero">
+  <div class="container t-dk-grid">
+    <div>
+      <p class="t-dk-eyebrow">{{ t.eyebrow }}</p>
+      <h1>{{ t.headline }}</h1>
+      <p class="t-dk-sub">{{ t.sub }}</p>
+      <ul class="t-dk-list">
+        {% for b in t.bullets[:4] %}<li>{{ b }}</li>{% endfor %}
+      </ul>
+    </div>
+    <div data-lp-block="form"></div>
+  </div>
+</section>
+<section class="t-dk-strip">
+  <div class="container">
+    <div class="lp-row">
+      {% for b in t.bullets[:3] %}
+      <div class="lp-col t-dk-feat"><span class="t-dk-icon">{{ ['◆', '●', '▲'][loop.index0] }}</span><p>{{ b }}</p></div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+<section class="t-dk-cta">
+  <div class="container t-dk-cta-in">
+    <h2>Ready to get started?</h2>
+    <a class="lp-btn t-dk-btn" href="#form">{{ t.cta }}</a>
+  </div>
+</section>
+<div data-lp-block="footer"></div>
+<style>
+.t-dk-hero { background:radial-gradient(1200px 500px at 85% 0%, color-mix(in srgb, var(--primary) 45%, #0b1020) 0%, #0b1020 60%); color:#e5e7eb; padding:72px 0; }
+.t-dk-grid { display:grid; grid-template-columns:minmax(0, 1fr) 420px; gap:52px; align-items:start; }
+.t-dk-eyebrow { color:#93c5fd; font-weight:700; letter-spacing:.12em; text-transform:uppercase; font-size:13px; margin:0 0 14px; }
+.t-dk-hero h1 { font-size:clamp(32px, 4.4vw, 52px); line-height:1.1; margin:0 0 18px; color:#fff; }
+.t-dk-sub { font-size:19px; color:#cbd5e1; margin:0 0 26px; }
+.t-dk-list { list-style:none; padding:0; margin:0; }
+.t-dk-list li { padding:12px 0 12px 34px; border-top:1px solid rgba(255,255,255,.1); position:relative; color:#e2e8f0; }
+.t-dk-list li::before { content:"✓"; position:absolute; left:0; top:12px; color:#4ade80; font-weight:800; }
+.t-dk-hero .form-card { border-top-color:#4ade80; }
+.t-dk-strip { background:#111827; color:#e5e7eb; padding:40px 0; }
+.t-dk-feat { display:flex; gap:14px; align-items:flex-start; }
+.t-dk-feat p { margin:0; color:#d1d5db; }
+.t-dk-icon { color:var(--primary); font-size:20px; line-height:1.3; }
+.t-dk-cta { background:var(--primary); padding:44px 0; }
+.t-dk-cta-in { display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; }
+.t-dk-cta h2 { color:#fff; margin:0; font-size:28px; }
+.t-dk-btn { background:#fff !important; color:var(--primary) !important; padding:13px 28px !important; }
+@media (max-width:920px) { .t-dk-grid { grid-template-columns:1fr; } }
+</style>

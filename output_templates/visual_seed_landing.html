@@ -1,0 +1,18 @@
+{# Starting layout for the visual editor. data-lp-block placeholders stay linked to the campaign settings. #}
+<div data-lp-block="header"></div>
+<div data-lp-block="banner"></div>
+<section class="lp-section">
+  <div class="container main-grid{{ ' form-left' if layout.form_position == 'left' }}">
+    {% if layout.form_position == 'left' %}<div data-lp-block="form"></div>{% endif %}
+    <div class="content">
+      {% if not layout.hero_text %}
+      {% if lp.eyebrow %}<p class="eyebrow">{{ lp.eyebrow }}</p>{% endif %}
+      {% if lp.headline %}<h1>{{ lp.headline }}</h1>{% endif %}
+      {% if lp.subheadline %}<p class="subheadline">{{ lp.subheadline }}</p>{% endif %}
+      {% endif %}
+      <div class="rich">{{ lp.body | content }}</div>
+    </div>
+    {% if layout.form_position != 'left' %}<div data-lp-block="form"></div>{% endif %}
+  </div>
+</section>
+<div data-lp-block="footer"></div>

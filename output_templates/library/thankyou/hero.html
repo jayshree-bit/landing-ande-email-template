@@ -1,0 +1,22 @@
+{# Success hero: full-width coloured thank-you message with the download button. #}
+<div data-lp-block="header"></div>
+<section class="t-tyh">
+  <div class="container t-tyh-in">
+    <div class="t-tyh-icon"><svg viewBox="0 0 24 24" width="40" height="40"><path fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+    <h1>{{ t.ty_heading }}</h1>
+    <p class="t-tyh-body">{{ t.ty_body }}</p>
+    <div data-lp-block="download"></div>
+    {% if t.website %}<p class="t-tyh-back"><a href="{{ t.website }}" target="_blank" rel="noopener">Visit {{ t.company }} &rarr;</a></p>{% endif %}
+  </div>
+</section>
+<div data-lp-block="footer"></div>
+<style>
+.t-tyh { background:linear-gradient(135deg, var(--primary) 0%, color-mix(in srgb, var(--primary) 55%, #0f172a) 100%); color:#fff; padding:90px 0; text-align:center; }
+.t-tyh-in { max-width:720px; }
+.t-tyh-icon { width:84px; height:84px; margin:0 auto 22px; border-radius:50%; background:rgba(255,255,255,.16); border:2px solid rgba(255,255,255,.4); display:grid; place-items:center; color:#fff; }
+.t-tyh h1 { color:#fff; font-size:clamp(32px, 4.5vw, 50px); margin:0 0 14px; }
+.t-tyh-body { font-size:19px; color:rgba(255,255,255,.9); margin:0 0 26px; }
+.t-tyh .btn { width:auto; min-width:260px; background:#fff; color:var(--primary); }
+.t-tyh .ty-note { color:rgba(255,255,255,.8); font-size:13px; }
+.t-tyh-back a { color:#fff; font-weight:600; }
+</style>

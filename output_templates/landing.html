@@ -1,4 +1,5 @@
 {% from "_partials.html" import head_assets, header, banner, footer with context %}
+{% from "_form.html" import lead_form with context %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,8 +9,14 @@
   {% if lp.meta_description %}<meta name="description" content="{{ lp.meta_description }}">{% endif %}
   {% if lp.manual_css %}<style>{{ lp.manual_css | safe }}</style>{% endif %}
 {{ head_assets() }}
+  {% for f in visual_fonts or [] %}<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family={{ f | replace(' ', '+') }}:wght@400;600;700&display=swap">{% endfor %}
+  {% if visual_css %}<style>{{ visual_css }}</style>{% endif %}
+  {% if visual_body %}<script>document.documentElement.classList.add('lp-js');setTimeout(function(){if(!window.LP_FX)document.documentElement.classList.remove('lp-js')},2500);</script>{% endif %}
 </head>
 <body>
+{% if visual_body %}
+<div class="visual-body">{{ visual_body }}</div>
+{% else %}
 {{ header() }}
 
 {{ banner() }}
@@ -24,76 +31,15 @@
     <div class="rich">{{ lp.body | content }}</div>
   </section>
 
-  <aside class="form-card" id="form">
-    {% if lp.form_title %}<h2>{{ lp.form_title }}</h2>{% endif %}
-    {% if lp.form_intro %}<p class="form-intro">{{ lp.form_intro }}</p>{% endif %}
-
-    <form id="lead-form" novalidate>
-      <div class="fields">
-      {% for f in lp.fields %}
-        {% set id = f.id %}
-        {% if f.type == 'hidden' %}
-          <input type="hidden" id="{{ id }}" data-field-id="{{ id }}" name="{{ f.name }}" value="{{ f.placeholder }}">
-        {% elif f.type == 'checkbox' %}
-          <div class="field full field-check{{ ' ' ~ f.css_class if f.css_class else '' }}">
-            <label class="check"><input type="checkbox" id="{{ id }}" data-field-id="{{ id }}" name="{{ f.name }}" value="Yes" {% if f.required %}required{% endif %} class="{{ f.css_class if f.css_class else '' }}">
-              <span>{{ f.label | safe }}{% if f.required %} <b class="req">*</b>{% endif %}</span></label>
-            <small class="error-msg"></small>
-          </div>
-        {% else %}
-          <div class="field {{ 'half' if f.width == 'half' else 'full' }}{{ ' ' ~ f.css_class if f.css_class else '' }}">
-            <label for="{{ id }}">{{ f.label | safe }}{% if f.required %} <b class="req">*</b>{% endif %}</label>
-            {% if f.type == 'select' %}
-              <div class="select-wrap">
-                <select id="{{ id }}" data-field-id="{{ id }}" name="{{ f.name }}" {% if f.required %}required{% endif %} class="{{ f.css_class if f.css_class else '' }}">
-                  <option value="">{{ f.placeholder or 'Select' }}</option>
-                  {% for o in f.options %}<option value="{{ o }}">{{ o }}</option>{% endfor %}
-                </select>
-              </div>
-            {% elif f.type == 'radio' %}
-              <div class="radios">
-              {% for o in f.options %}
-                <label class="check"><input type="radio" id="{{ id }}_{{ loop.index }}" data-field-id="{{ id }}" name="{{ f.name }}" value="{{ o }}" {% if f.required %}required{% endif %} class="{{ f.css_class if f.css_class else '' }}"> <span>{{ o }}</span></label>
-              {% endfor %}
-              </div>
-            {% elif f.type == 'textarea' %}
-              <textarea id="{{ id }}" data-field-id="{{ id }}" name="{{ f.name }}" rows="3" placeholder="{{ f.placeholder }}" {% if f.required %}required{% endif %} class="{{ f.css_class if f.css_class else '' }}"></textarea>
-            {% else %}
-              <input id="{{ id }}" data-field-id="{{ id }}" name="{{ f.name }}" type="{{ f.type }}" placeholder="{{ f.placeholder }}"{{ ' autocomplete="email"' | safe if f.type == 'email' }}{{ ' autocomplete="tel"' | safe if f.type == 'tel' }}{{ ' required' if f.required }} class="{{ f.css_class if f.css_class else '' }}">
-            {% endif %}
-            <small class="error-msg"></small>
-          </div>
-        {% endif %}
-      {% endfor %}
-      </div>
-
-      {# Campaign tracking, filled from the URL query string by script.js #}
-      {% for utm in ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'] %}
-      <input type="hidden" name="{{ utm }}" value="">
-      {% endfor %}
-      <input type="text" name="website_hp" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-
-      {% if lp.consent_text %}
-        {% if lp.consent_type == 'text' %}
-        <div class="consent consent-text">{{ lp.consent_text | content }}</div>
-        {% else %}
-        <div class="consent">
-          <label class="check consent-check">
-            <input type="checkbox" name="consent" value="Yes" required>
-            <span>{{ lp.consent_text | content }}</span>
-          </label>
-        </div>
-        {% endif %}
-      {% endif %}
-      <button type="submit" class="btn">{{ lp.submit_text or 'Submit' }}</button>
-      <p class="form-error" role="alert" hidden></p>
-    </form>
-  </aside>
+  {{ lead_form() }}
 </main>
 
 {{ footer() }}
+{% endif %}
 <script>window.LP_CONFIG = {{ js_config | tojson }};</script>
 <script src="assets/script.js"></script>
 {% if lp.manual_js %}<script>{{ lp.manual_js | safe }}</script>{% endif %}
+{% if visual_body %}<script src="assets/effects.js"></script>{% endif %}
+{% if visual_js %}<script>{{ visual_js }}</script>{% endif %}
 </body>
 </html>

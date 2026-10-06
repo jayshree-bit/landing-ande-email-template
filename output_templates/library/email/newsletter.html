@@ -1,0 +1,32 @@
+{# Email - Newsletter: coloured title band, image + text rows, button. Inline styles only. #}
+{% set F = "font-family:Arial,Helvetica,sans-serif;" %}
+{% set img = (img_base ~ files.banner) if files.banner else '' %}
+<div class="email-container" style="max-width:600px;margin:0 auto;background-color:#ffffff;border-radius:8px;overflow:hidden;">
+  <div data-lp-block="email-header"></div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td class="px" style="padding:34px 40px;background-color:{{ primary }};{{ F }}">
+        <p style="margin:0 0 8px;{{ F }}font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#dbeafe;">{{ t.eyebrow }}</p>
+        <h1 style="margin:0;{{ F }}font-size:26px;line-height:34px;color:#ffffff;">{{ t.email_headline }}</h1>
+      </td>
+    </tr>
+  </table>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr><td class="px" style="padding:28px 40px 6px;{{ F }}font-size:15px;line-height:24px;color:#334155;"><p style="margin:0;">{{ t.email_greeting }}</p><p style="margin:12px 0 0;">{{ t.email_intro }}</p></td></tr>
+  </table>
+  {% for b in t.bullets[:2] %}
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      {% if loop.index0 % 2 == 0 %}
+      <td class="stack" width="42%" valign="top" style="width:42%;padding:20px 12px 8px 40px;">{% if img %}<img src="{{ img }}" width="210" alt="" style="display:block;width:100%;height:auto;border-radius:8px;border:0;">{% endif %}</td>
+      <td class="stack" width="58%" valign="middle" style="width:58%;padding:20px 40px 8px 12px;{{ F }}font-size:15px;line-height:23px;color:#334155;"><h3 style="margin:0 0 6px;{{ F }}font-size:17px;line-height:24px;color:#0f172a;">{{ b }}</h3><p style="margin:0;">See how this works in practice, with clear examples.</p></td>
+      {% else %}
+      <td class="stack" width="58%" valign="middle" style="width:58%;padding:20px 12px 8px 40px;{{ F }}font-size:15px;line-height:23px;color:#334155;"><h3 style="margin:0 0 6px;{{ F }}font-size:17px;line-height:24px;color:#0f172a;">{{ b }}</h3><p style="margin:0;">Practical guidance your team can act on today.</p></td>
+      <td class="stack" width="42%" valign="top" style="width:42%;padding:20px 40px 8px 12px;">{% if img %}<img src="{{ img }}" width="210" alt="" style="display:block;width:100%;height:auto;border-radius:8px;border:0;">{% endif %}</td>
+      {% endif %}
+    </tr>
+  </table>
+  {% endfor %}
+  <div data-lp-block="email-cta"></div>
+  <div data-lp-block="email-footer"></div>
+</div>

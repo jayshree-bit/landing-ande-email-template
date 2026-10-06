@@ -42,6 +42,7 @@
 <body>
 <header class="top">
   <h1>LP &amp; Email Campaign Portal</h1>
+  <a class="btn" href="/templates" style="background:#7c3aed">✨ Start from a template</a>
   <a class="btn" href="/builder">+ New campaign</a>
 </header>
 <main>
@@ -79,7 +80,7 @@ function render() {
     : sort === 'leads' ? b.leads - a.leads
     : String(b[sort + '_at'] || '').localeCompare(String(a[sort + '_at'] || '')));
   if (!items.length) {
-    $('#grid').innerHTML = `<div class="empty" style="grid-column:1/-1"><p>No campaigns yet.</p><a class="btn" href="/builder">Create your first campaign</a></div>`;
+    $('#grid').innerHTML = `<div class="empty" style="grid-column:1/-1"><p>No campaigns yet.</p><a class="btn" href="/templates" style="background:#7c3aed">Start from a template</a> &nbsp; <a class="btn" href="/builder">Create a blank campaign</a></div>`;
     return;
   }
   $('#grid').innerHTML = list.map(c => `

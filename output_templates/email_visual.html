@@ -1,0 +1,44 @@
+{# Email built in the visual editor: visual_body is the 600px container with inlined styles. #}
+{% set e = email or {} %}
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="x-apple-disable-message-reformatting">
+  <title>{{ e.subject or campaign_name }}</title>
+  <!--[if mso]><noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript><![endif]-->
+  <style>
+    body { margin:0; padding:0; width:100% !important; -webkit-text-size-adjust:100%; -ms-text-size-adjust:100%; }
+    table { border-collapse:collapse; mso-table-lspace:0pt; mso-table-rspace:0pt; }
+    img { border:0; outline:none; text-decoration:none; -ms-interpolation-mode:bicubic; }
+    a { color:{{ primary }}; }
+    [data-lp-block] { display:block; }
+    @media screen and (max-width:620px) {
+      .email-container { width:100% !important; }
+      .px { padding-left:20px !important; padding-right:20px !important; }
+      .stack { display:block !important; width:100% !important; max-width:100% !important; }
+      .logo-cell { display:block !important; width:100% !important; text-align:center !important; padding:6px 0 !important; }
+      .logo-cell img { margin:0 auto !important; }
+      .lp-hide-mobile { display:none !important; max-height:0 !important; overflow:hidden !important; }
+    }
+    @media screen and (min-width:621px) { .lp-hide-desktop { display:none !important; } }
+{{ visual_css }}
+  </style>
+</head>
+<body style="margin:0;padding:0;background-color:#f1f5f9;">
+  {% if e.preheader %}
+  <div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all;">{{ e.preheader }}&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;</div>
+  {% endif %}
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f1f5f9;">
+    <tr>
+      <td align="center" style="padding:24px 10px;">
+        <!--[if mso]><table role="presentation" width="600" align="center" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
+        {{ visual_body }}
+        <!--[if mso]></td></tr></table><![endif]-->
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
