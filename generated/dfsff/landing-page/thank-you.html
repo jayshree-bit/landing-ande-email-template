@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Thank you! | dfsff</title>
+  <meta name="robots" content="noindex">
+  <link rel="stylesheet" href="assets/style.css">
+
+</head>
+<body class="ty-page">
+<header class="site-header" id="site-header">
+  <div class="container header-inner">
+<span></span>  </div>
+</header>
+
+
+
+<main class="container ty-wrap">
+  <div class="ty-card">
+    <div class="ty-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="36" height="36"><path fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+    </div>
+    <h1>Thank you!</h1>
+    <div class="rich"></div>
+    
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="container footer-inner">
+    <div class="footer-grid footer-grid-3">
+
+
+
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <div class="container"></div>
+  </div>
+</footer>
+
+<script>
+  (function () {
+    function normalizeToken(value) {
+      return (value || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+    }
+
+    function applySubmittedValues() {
+      var params = new URLSearchParams(location.search);
+      var values = {};
+      params.forEach(function (value, key) {
+        if (key === 'submitted' || key === 'preview') return;
+        values[normalizeToken(key)] = value;
+      });
+
+      function replaceToken(match, token) {
+        var key = normalizeToken(token);
+        return Object.prototype.hasOwnProperty.call(values, key) ? values[key] : match;
+      }
+
+      var roots = document.querySelector('.visual-body') ? [document.querySelector('.visual-body')]
+        : [document.querySelector('h1'), document.querySelector('.rich'), document.getElementById('pdf-link'), document.getElementById('ty-note')];
+      roots.forEach(function (root) {
+        if (!root) return;
+        var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+        var textNode;
+        while ((textNode = walker.nextNode())) {
+          textNode.nodeValue = textNode.nodeValue.replace(/\[([^\]]+)\]/g, replaceToken);
+        }
+      });
+    }
+
+    applySubmittedValues();
+  })();
+</script>
+</body>
+</html>

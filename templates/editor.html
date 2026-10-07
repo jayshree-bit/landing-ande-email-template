@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Visual Editor · {{ name }}</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/grapesjs@0.22.16/dist/css/grapes.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css">
 <style>
   :root {
     /* Light, Elementor-like theme */
@@ -57,6 +58,14 @@
   .pane { flex:1; overflow:auto; display:none; }
   .pane.active { display:block; }
   .pane-empty { color:var(--muted); padding:24px 18px; line-height:1.6; }
+  .quick-format { padding:12px; border-bottom:1px solid var(--line); }
+  .quick-format label { display:block; margin-bottom:7px; color:var(--head); font-size:12.5px; font-weight:700; }
+  .quick-format .hint { margin:0 0 8px; color:var(--muted); font-size:11px; }
+  .quick-format .align-group { display:grid; grid-template-columns:repeat(4,1fr); border:1px solid var(--line); border-radius:4px; overflow:hidden; }
+  .quick-format button { background:#fff; color:var(--txt); border:0; border-left:1px solid var(--line); padding:7px 2px; font:inherit; font-size:11.5px; cursor:pointer; }
+  .quick-format button:first-child { border-left:0; }
+  .quick-format button:hover:not(.active) { background:var(--side2); }
+  .quick-format button.active { background:var(--head); color:#fff; }
   #search { margin:12px; width:calc(100% - 24px); padding:9px 11px; border-radius:4px; border:1px solid var(--line); background:#fff; color:var(--txt); font:inherit; }
   #search:focus { outline:none; border-color:var(--accent); }
 
@@ -69,6 +78,16 @@
   .ctl-row { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:9px 0; font-size:12.5px; color:var(--txt); }
   .ctl-row > label { flex:none; }
   .ctl-row select, .ctl-row input[type=number], .ctl-row input[type=text] { font:inherit; font-size:12.5px; background:#fff; color:var(--txt); border:1px solid var(--line); border-radius:3px; padding:5px 7px; }
+  .cta-edit { padding:12px 16px; border-bottom:1px solid var(--line); }
+  .cta-edit label { display:block; color:var(--head); font-size:12.5px; font-weight:700; }
+  .cta-edit input { width:100%; margin-top:6px; padding:7px 8px; border:1px solid var(--line); border-radius:3px; color:var(--txt); font:inherit; }
+  .cta-edit input:focus { outline:none; border-color:var(--accent); }
+  .cta-edit select { width:100%; margin-top:6px; padding:7px 8px; border:1px solid var(--line); border-radius:3px; background:#fff; color:var(--txt); font:inherit; }
+  #richTextEditor { margin-top:6px; background:#fff; color:var(--txt); font:13px/1.4 'Segoe UI',Arial,sans-serif; }
+  #richTextEditor .ql-toolbar { padding:4px 6px; border-color:var(--line); }
+  #richTextEditor .ql-container { min-height:54px; border-color:var(--line); }
+  #richTextEditor .ql-editor { min-height:54px; padding:8px; }
+  #richTextEditor .ql-editor p { margin:0; }
   .ctl-row select { width:52%; }
   .ctl-slider { margin:12px 0; }
   .ctl-slider .top { display:flex; justify-content:space-between; align-items:center; font-size:12.5px; margin-bottom:6px; }
@@ -313,6 +332,56 @@
       <div class="side-hint">Drag a widget onto the page, or select an element and click its <b>+</b> button. <b>Dashed</b> widgets are live: they always show the logos, banner, form and footer from the campaign.</div>
     </div>
     <div class="pane" id="pane-layout">
+      <div class="cta-edit" id="cardCard" style="display:none">
+        <label>Rounded card &amp; spacing</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 10px;margin-top:8px">
+          <div><label for="cardRadius" style="font-weight:600">Corner radius (px)</label><input id="cardRadius" type="number" min="0" max="60" placeholder="0"></div>
+          <div><label for="cardSide" style="font-weight:600">Space left &amp; right (px)</label><input id="cardSide" type="number" min="0" max="80" placeholder="0"></div>
+          <div><label for="cardTop" style="font-weight:600">Space above (px)</label><input id="cardTop" type="number" min="0" max="120" placeholder="0"></div>
+          <div><label for="cardBottom" style="font-weight:600">Space below (px)</label><input id="cardBottom" type="number" min="0" max="120" placeholder="0"></div>
+        </div>
+        <p class="ctl-note">Table cells ignore normal margins in browsers and email apps, so this adds real spacer rows/cells (and rounds the corners safely) instead.</p>
+      </div>
+      <div class="cta-edit" id="richTextCard" style="display:none">
+        <label>Text editor</label>
+        <div id="richTextEditor" aria-label="Rich text editor for the selected cell"></div>
+        <p class="ctl-note">Edits the text of the selected cell. Changes show on the page straight away.</p>
+      </div>
+      <div class="cta-edit" id="ctaTextCard" style="display:none">
+        <label>Email button text</label>
+        <input id="ctaTextInput" type="text" maxlength="120" placeholder="Button label">
+        <label for="ctaLinkInput" style="margin-top:12px">Button link</label>
+        <input id="ctaLinkInput" type="url" placeholder="https://…">
+        <label for="ctaFontInput" style="margin-top:12px">Button font</label>
+        <select id="ctaFontInput" aria-label="Button font"></select>
+        <p class="ctl-note">This changes the email CTA button when you save.</p>
+      </div>
+      <div class="cta-edit" id="liveEditCard" style="display:none">
+        <label>Text from the campaign builder</label>
+        <p class="ctl-note">This block is filled in automatically from the campaign, so its text can't be edited here.</p>
+        <button id="liveEditBtn" type="button" style="margin-top:10px;width:100%;padding:8px;border:0;border-radius:4px;background:var(--accent);color:#fff;font:600 13px inherit;cursor:pointer">Convert to editable text</button>
+        <p class="ctl-note">After converting you can edit it directly (double-click the text), but it will no longer follow the builder.</p>
+      </div>
+      <div class="cta-edit" id="buttonSettingsCard" style="display:none">
+        <label for="buttonTextInput">Button text</label>
+        <input id="buttonTextInput" type="text" maxlength="120" placeholder="Button label">
+        <label for="buttonLinkInput" style="margin-top:12px">Button link</label>
+        <input id="buttonLinkInput" type="text" placeholder="https://… or #form">
+        <label for="buttonFontInput" style="margin-top:12px">Button font</label>
+        <select id="buttonFontInput" aria-label="Button font"></select>
+        <p class="ctl-note">Edit the selected button label and destination.</p>
+      </div>
+      <div class="cta-edit" id="emailBackgroundCard" style="display:none">
+        <label for="emailBackgroundInput">Email body background</label>
+        <input id="emailBackgroundInput" type="color" value="#f1f5f9" aria-label="Email body background color">
+        <p class="ctl-note">Changes the background around the email content.</p>
+      </div>
+      <div class="cta-edit" id="emailWidthCard" style="display:none">
+        <label for="emailWidthInput">Email width (px)</label>
+        <input id="emailWidthInput" type="number" min="320" max="900" step="10" placeholder="600">
+        <input id="emailWidthRange" type="range" min="320" max="900" step="10" style="padding:0">
+        <p class="ctl-note">Sets the width of the whole email and keeps it centred. 600–700 is the usual range; very wide emails get cut off in some mail apps.</p>
+      </div>
       <button type="button" class="ctl-head" data-sec="container">Container</button>
       <div class="ctl-body" id="ctlContainer">
         <div class="ctl-row"><label>Container layout</label><select id="cDisplay"><option value="block">Block</option><option value="flex">Flexbox</option><option value="grid">Grid</option></select></div>
@@ -370,6 +439,16 @@
     </div>
     <div class="pane" id="pane-style">
       <div class="pane-empty" id="style-empty">Select an element on the page to style it.</div>
+      <div class="quick-format" id="textAlignCard" style="display:none">
+        <label>Text alignment</label>
+        <p class="hint">Applies to the selected text block.</p>
+        <div class="align-group" role="group" aria-label="Text alignment">
+          <button type="button" data-align="left" title="Align left" aria-label="Align left">Left</button>
+          <button type="button" data-align="center" title="Center text" aria-label="Center text">Center</button>
+          <button type="button" data-align="right" title="Align right" aria-label="Align right">Right</button>
+          <button type="button" data-align="justify" title="Justify text" aria-label="Justify text">Justify</button>
+        </div>
+      </div>
       <div id="styles"></div>
     </div>
     <div class="pane" id="pane-traits">
@@ -430,9 +509,11 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/grapesjs@0.22.16/dist/grapes.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
 <script>
 const SLUG = "{{ slug }}", PAGE = "{{ page }}";
 const IS_EMAIL = PAGE === 'email';
+const GOOGLE_FONTS = {{ google_fonts|tojson }};
 const PAGE_URL = `/c/${SLUG}/` + (IS_EMAIL ? 'email-template/email.html' : `landing-page/${PAGE === 'landing' ? 'index.html' : 'thank-you.html'}`);
 const MOBILE_MAX = IS_EMAIL ? 620 : 767;
 const $ = s => document.querySelector(s);
@@ -444,7 +525,8 @@ const LIVE_LABELS = {
   header: 'Site header (logos)', banner: 'Banner', 'banner-slim': 'Banner strip', footer: 'Footer',
   form: 'Lead form', download: 'PDF download button',
   'email-header': 'Email header (logos)', 'email-banner': 'Email banner', 'email-content': 'Email text from builder',
-  'email-cta': 'Email CTA button', 'email-signoff': 'Sign-off', 'email-footer': 'Email footer + unsubscribe',
+  'email-cta': 'Email CTA button', 'email-cta-signature': 'Email CTA button', 'email-signoff': 'Sign-off', 'email-footer': 'Email footer + unsubscribe',
+  'email-footer-signature': 'Publisher footer',
 };
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
@@ -539,14 +621,21 @@ function emailBlocks(add) {
   add('image', 'Image', 'Email content', T(`<td style="padding:0;"><img src="${imgSrc('email-banner')}" width="600" alt="" style="display:block;width:100%;max-width:600px;height:auto;border:0;"></td>`));
   add('list', 'List', 'Email content', T(td('<ul style="margin:0;padding:0 0 0 20px;"><li style="margin:0 0 8px;">First point</li><li style="margin:0 0 8px;">Second point</li><li style="margin:0 0 8px;">Third point</li></ul>')));
   add('quote', 'Quote', 'Email content', T(td('<p style="margin:0;padding:8px 16px;border-left:4px solid ' + (META.primary || '#0b5cff') + ';font-style:italic;">“A short quote or key message.”</p>')));
+  add('col1', '1 Column', 'Email layout', T(ecol(100, '<p style="margin:0;">Write your content here.</p>', '12px 40px')));
   add('col2', '2 Columns', 'Email layout', T(ecol(50, '<p style="margin:0;">Left column text.</p>', '12px 12px 12px 40px') + ecol(50, '<p style="margin:0;">Right column text.</p>', '12px 40px 12px 12px')));
   add('col3', '3 Columns', 'Email layout', T(ecol(33, '<p style="margin:0;">Column one.</p>', '12px 8px 12px 40px') + ecol(34, '<p style="margin:0;">Column two.</p>', '12px 8px') + ecol(33, '<p style="margin:0;">Column three.</p>', '12px 40px 12px 8px')));
-  add('imgtext', 'Image + text', 'Email layout', T(ecol(40, `<img src="${imgSrc('email-banner')}" width="200" alt="" style="display:block;width:100%;height:auto;border-radius:6px;">`, '16px 12px 16px 40px') +
-    ecol(60, '<h3 style="margin:0 0 8px;font-size:18px;color:#0f172a;">Feature title</h3><p style="margin:0;">Explain the benefit in a sentence or two.</p>', '16px 40px 16px 12px')));
+  const featureImage = `<img src="${imgSrc('email-banner')}" width="200" alt="" style="display:block;width:100%;height:auto;border-radius:6px;">`;
+  const featureCopy = '<h3 style="margin:0 0 8px;font-size:18px;color:#0f172a;">Feature title</h3><p style="margin:0;">Explain the benefit in a sentence or two.</p>';
+  add('imgtext', 'Image left, text right', 'Email layout', T(ecol(40, featureImage, '16px 12px 16px 40px') +
+    ecol(60, featureCopy, '16px 40px 16px 12px')));
+  add('textimg', 'Text left, image right', 'Email layout', T(ecol(60, featureCopy, '16px 12px 16px 40px') +
+    ecol(40, featureImage, '16px 40px 16px 12px')));
+  add('imgtext-stacked', 'Image above, text below', 'Email layout',
+    T(`<td style="padding:16px 40px 0;">${featureImage}</td>`) + T(td(featureCopy, 'padding:12px 40px 16px;')));
   add('box', 'Highlight box', 'Email layout', T(`<td style="padding:12px 40px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="background-color:#f1f5f9;border-radius:8px;padding:20px;${FONT}font-size:15px;line-height:24px;color:#333333;"><strong>Key takeaway:</strong> highlight one important point here.</td></tr></table></td>`));
   add('divider', 'Divider', 'Email layout', T('<td style="padding:12px 40px;"><div style="border-top:1px solid #e2e8f0;font-size:0;line-height:0;">&nbsp;</div></td>'));
   add('spacer', 'Spacer', 'Email layout', T('<td style="height:24px;font-size:0;line-height:0;">&nbsp;</td>'));
-  return ['email-header', 'email-banner', 'email-content', 'email-cta', 'email-signoff', 'email-footer'];
+  return ['email-header', 'email-banner', 'email-content', 'email-cta', 'email-cta-signature', 'email-signoff', 'email-footer', 'email-footer-signature'];
 }
 
 function addBlocks(bm) {
@@ -554,7 +643,7 @@ function addBlocks(bm) {
     bm.add(id, { label, category, media: I[extra.icon || id] || I.section, content, ...extra });
   const live = (IS_EMAIL ? emailBlocks : webBlocks)(add);
   const iconFor = { 'banner-slim': 'banner', 'email-header': 'header', 'email-banner': 'banner', 'email-content': 'text',
-    'email-cta': 'button', 'email-signoff': 'text', 'email-footer': 'footer' };
+    'email-cta': 'button', 'email-cta-signature': 'button', 'email-signoff': 'text', 'email-footer': 'footer', 'email-footer-signature': 'footer' };
   live.forEach(key => add(`live-${key}`, LIVE_LABELS[key], 'Campaign (live)', `<div data-lp-block="${key}"></div>`,
     { icon: iconFor[key] || key, attributes: { class: 'gjs-block live' } }));
 }
@@ -597,6 +686,399 @@ function renderCrumbs() {
     el.appendChild(b);
   });
   el.style.display = 'flex';
+}
+
+function renderTextAlign() {
+  const sel = editor && editor.getSelected();
+  const target = alignmentTarget(sel);
+  const el = target && target.getEl();
+  const card = $('#textAlignCard');
+  const on = !!el && sel.get('type') !== 'wrapper' && el.nodeType === 1;
+  card.style.display = on ? 'block' : 'none';
+  if (!on) return;
+  const current = el.ownerDocument.defaultView.getComputedStyle(el).textAlign;
+  $$('#textAlignCard [data-align]').forEach(button => {
+    const active = button.dataset.align === current;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-pressed', active ? 'true' : 'false');
+  });
+}
+
+function alignmentTarget(comp) {
+  let target = comp;
+  let el = target && target.getEl();
+  while (target && el && el.ownerDocument.defaultView.getComputedStyle(el).display === 'inline') {
+    target = target.parent();
+    el = target && target.getEl();
+  }
+  return target;
+}
+
+const LIVE_EDITABLE = ['email-content', 'email-signoff', 'email-header', 'email-banner', 'email-footer', 'email-footer-signature'];
+function liveTarget(comp) {
+  if (!IS_EMAIL || !comp) return null;
+  const ok = c => c && LIVE_EDITABLE.includes((c.getAttributes() || {})['data-lp-block']);
+  if (ok(comp)) return comp;
+  for (let p = comp.parent(); p && p.get('type') !== 'wrapper'; p = p.parent()) if (ok(p)) return p;
+  const inside = comp.find('[data-lp-block]').filter(ok);
+  return inside.length === 1 ? inside[0] : null;
+}
+function renderLiveEdit() {
+  const card = $('#liveEditCard');
+  if (card) card.style.display = liveTarget(editor && editor.getSelected()) ? 'block' : 'none';
+}
+function convertLive(comp) {
+  if (!comp) return;
+  const key = comp.getAttributes()['data-lp-block'];
+  const html = BLOCKS[key];
+  if (!html) return;
+  if (!confirm('Convert this block to normal, editable content? It will no longer update from the campaign builder.')) return;
+  const added = comp.replaceWith(html);
+  const first = Array.isArray(added) ? added[0] : added;
+  if (first) {
+    const cells = [first, ...first.find('td, div, p')].filter(c => richTarget(c));
+    editor.select(cells.length ? cells[cells.length > 1 ? 0 : 0] : first);
+  }
+  markDirty();
+}
+
+/* ---------------- Rounded card + spacing for a table cell ---------------- */
+function cardTarget(comp) {
+  if (!IS_EMAIL || !comp) return null;
+  const tag = (comp.get('tagName') || '').toLowerCase();
+  if (tag !== 'td' && tag !== 'th') return null;
+  if ((comp.getAttributes() || {})['data-lp-gap']) return null;
+  return comp.parent() && comp.parent().parent() ? comp : null;
+}
+function closestTag(comp, tag) {
+  for (let p = comp.parent(); p; p = p.parent()) if ((p.get('tagName') || '').toLowerCase() === tag) return p;
+  return null;
+}
+function cardId(cell) {
+  let id = cell.getAttributes()['data-lp-card'];
+  if (!id) { id = 'c' + Math.random().toString(36).slice(2, 8); cell.addAttributes({ 'data-lp-card': id }); }
+  return id;
+}
+// The element that carries the visible background (the cell, or the nearest ancestor that has one).
+function radiusHost(cell) {
+  for (let c = cell; c && c.get('type') !== 'wrapper'; c = c.parent()) {
+    const el = c.getEl && c.getEl();
+    if (!el) continue;
+    const bg = getComputedStyle(el).backgroundColor;
+    if (bg && bg !== 'transparent' && !/rgba\(\s*0,\s*0,\s*0,\s*0\s*\)/.test(bg)) return c;
+  }
+  return cell;
+}
+function rowFor(host) {
+  for (let c = host; c && c.get('type') !== 'wrapper'; c = c.parent()) if ((c.get('tagName') || '').toLowerCase() === 'tr') return c;
+  return null;
+}
+// The table row that must get the gaps: the one holding whichever element carries the dark background.
+function anchorRow(cell) { return rowFor(radiusHost(cell)) || cell.parent(); }
+function gapComps(cell) {
+  const id = cell.getAttributes()['data-lp-card'];
+  const out = { top: null, bottom: null, left: null, right: null };
+  if (!id) return out;
+  const row = anchorRow(cell), tbody = row && row.parent();
+  if (tbody) tbody.components().models.forEach(r => { const g = r.getAttributes()['data-lp-gap']; if (g === id + '-top') out.top = r; if (g === id + '-bottom') out.bottom = r; });
+  if (row) row.components().models.forEach(c => { const g = c.getAttributes()['data-lp-gap']; if (g === id + '-left') out.left = c; if (g === id + '-right') out.right = c; });
+  return out;
+}
+function gapPx(comp) {
+  if (!comp) return 0;
+  const td = (comp.get('tagName') || '').toLowerCase() === 'td' ? comp : comp.find('td')[0];
+  return td ? parseInt(td.getAttributes().height || td.getAttributes().width || 0, 10) || 0 : 0;
+}
+function applyCard(cell, { radius, top, bottom, side }) {
+  const host = radiusHost(cell);
+  const hostTag = (host.get('tagName') || '').toLowerCase();
+  const row = rowFor(host) || cell.parent(), tbody = row.parent();
+  const table = hostTag === 'table' ? host : closestTag(host, 'table');
+  const id = cardId(cell);
+  marginBusy = true;
+  // 1. rounded corners (need a separated-borders table, otherwise the radius is ignored)
+  const style = { ...host.getStyle() };
+  if (radius > 0) style['border-radius'] = radius + 'px'; else delete style['border-radius'];
+  if (hostTag === 'table') { if (radius > 0) style.overflow = 'hidden'; else if (style.overflow === 'hidden') delete style.overflow; }
+  host.setStyle(style);
+  if (radius > 0 && table) table.addStyle({ 'border-collapse': 'separate', 'border-spacing': '0' });
+  // 2. remove the old spacers, then rebuild them outside the element that carries the background
+  const old = gapComps(cell);
+  [old.top, old.bottom, old.left, old.right].forEach(g => g && g.remove());
+  const cells = row.components().models.filter(c => ['td', 'th'].includes((c.get('tagName') || '').toLowerCase()));
+  // Component definitions (not HTML strings): a bare <tr>/<td> in an HTML string is dropped by the browser's parser.
+  const spacerCell = (pos, props, style) => ({
+    tagName: 'td', attributes: { 'data-lp-gap': `${id}-${pos}`, ...props }, style: { 'font-size': '0', 'line-height': '0', ...style },
+    components: [{ type: 'textnode', content: '\u00a0' }],
+  });
+  if (side > 0 && cells.length === 1 && !(parseInt(cells[0].getAttributes().colspan, 10) > 1)) {
+    row.components().add(spacerCell('left', { width: String(side) }, { width: side + 'px' }), { at: 0 });
+    row.components().add(spacerCell('right', { width: String(side) }, { width: side + 'px' }));
+  }
+  const span = Math.max(1, row.components().length);
+  const gap = (pos, h) => ({
+    tagName: 'tr', attributes: { 'data-lp-gap': `${id}-${pos}` },
+    components: [{
+      tagName: 'td', attributes: { colspan: String(span), height: String(h) }, style: { height: h + 'px', 'line-height': h + 'px', 'font-size': '0' },
+      components: [{ type: 'textnode', content: '\u00a0' }],
+    }],
+  });
+  let idx = tbody.components().models.indexOf(row);
+  if (top > 0) { tbody.components().add(gap('top', top), { at: idx }); idx += 1; }
+  if (bottom > 0) tbody.components().add(gap('bottom', bottom), { at: idx + 1 });
+  marginBusy = false;
+  markDirty();
+}
+
+// Margin set in the Style tab does nothing on a table cell: turn it into real gaps.
+let marginBusy = false, marginTimer = null;
+function boxValues(st) {
+  let t = 0, r = 0, b = 0, l = 0;
+  if (st.margin != null) {
+    const p = String(st.margin).trim().split(/\s+/).map(v => parseInt(v, 10) || 0);
+    if (p.length === 1) t = r = b = l = p[0];
+    else if (p.length === 2) { t = b = p[0]; r = l = p[1]; }
+    else if (p.length === 3) { t = p[0]; r = l = p[1]; b = p[2]; }
+    else [t, r, b, l] = p;
+  }
+  t = parseInt(st['margin-top'], 10) || t; r = parseInt(st['margin-right'], 10) || r;
+  b = parseInt(st['margin-bottom'], 10) || b; l = parseInt(st['margin-left'], 10) || l;
+  return { t, r, b, l };
+}
+function convertCellMargin(comp) {
+  if (marginBusy || !IS_EMAIL) return;
+  const cell = cardTarget(comp && comp.getStyle ? comp : editor.getSelected());
+  if (!cell) return;
+  const st = cell.getStyle();
+  if (!['margin', 'margin-top', 'margin-right', 'margin-bottom', 'margin-left'].some(k => st[k] != null)) return;
+  const m = boxValues(st);
+  clearTimeout(marginTimer);
+  marginTimer = setTimeout(() => {
+    if (marginBusy) return;
+    const cur = cell.getStyle();
+    ['margin', 'margin-top', 'margin-right', 'margin-bottom', 'margin-left'].forEach(k => delete cur[k]);
+    marginBusy = true; cell.setStyle(cur); marginBusy = false;
+    if (!m.t && !m.b && !m.l && !m.r) return;
+    const g = gapComps(cell), host = radiusHost(cell);
+    applyCard(cell, {
+      radius: parseInt(host.getStyle()['border-radius'], 10) || 0,
+      top: Math.min(120, m.t || gapPx(g.top)), bottom: Math.min(120, m.b || gapPx(g.bottom)),
+      side: Math.min(80, Math.max(m.l, m.r) || gapPx(g.left)),
+    });
+    renderCard();
+  }, 350);
+}
+function renderCard() {
+  const cell = cardTarget(editor && editor.getSelected());
+  const card = $('#cardCard');
+  card.style.display = cell ? 'block' : 'none';
+  if (!cell) return;
+  const g = gapComps(cell);
+  const set = (id, v) => { const el = $('#' + id); if (document.activeElement !== el) el.value = v || ''; };
+  set('cardRadius', parseInt(radiusHost(cell).getStyle()['border-radius'], 10) || 0);
+  set('cardTop', gapPx(g.top)); set('cardBottom', gapPx(g.bottom)); set('cardSide', gapPx(g.left));
+}
+let cardTimer = null;
+function onCardInput() {
+  clearTimeout(cardTimer);
+  cardTimer = setTimeout(() => {
+    const cell = cardTarget(editor.getSelected());
+    if (!cell) return;
+    const n = id => Math.max(0, parseInt($('#' + id).value, 10) || 0);
+    applyCard(cell, { radius: n('cardRadius'), top: n('cardTop'), bottom: n('cardBottom'), side: n('cardSide') });
+  }, 300);
+}
+
+/* ---------------- Rich text editor for the selected cell ---------------- */
+const RICH_TAGS = ['td', 'th', 'div', 'p', 'span', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'li'];
+let richQuill = null, richTarget_ = null, richBusy = false;
+
+function richTarget(comp) {
+  if (!comp || comp.get('type') === 'wrapper') return null;
+  const tag = (comp.get('tagName') || '').toLowerCase();
+  if (!RICH_TAGS.includes(tag) && comp.get('type') !== 'text') return null;
+  if ((comp.getAttributes() || {})['data-lp-block']) return null;
+  if (comp.find('table, [data-lp-block]').length) return null;
+  const html = comp.getInnerHTML ? comp.getInnerHTML() : '';
+  return html.replace(/<[^>]*>/g, '').trim() ? comp : null;
+}
+
+function initRichQuill() {
+  if (richQuill || typeof Quill === 'undefined') return richQuill;
+  const Size = Quill.import('attributors/style/size');
+  Size.whitelist = ['12px', '14px', '16px', '18px', '20px', '24px', '32px'];
+  Quill.register(Size, true);
+  Quill.register(Quill.import('attributors/style/align'), true);
+  Quill.register(Quill.import('attributors/style/color'), true);
+  Quill.register(Quill.import('attributors/style/background'), true);
+  richQuill = new Quill('#richTextEditor', {
+    theme: 'snow',
+    modules: { toolbar: [
+      [{ size: ['12px', '14px', '16px', '18px', '20px', '24px', '32px'] }],
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ color: [] }, { background: [] }],
+      [{ list: 'ordered' }, { list: 'bullet' }, { align: [] }],
+      ['link', 'clean'],
+    ] },
+  });
+  richQuill.on('text-change', (delta, old, source) => {
+    if (source !== 'user' || richBusy || !richTarget_) return;
+    let html = richQuill.root.innerHTML;
+    if (html === '<p><br></p>') html = '';
+    html = html.replace(/<p>/g, '<p style="margin:0 0 10px;">').replace(/<p style="/g, '<p style="margin:0 0 10px;');
+    html = html.replace(/margin:0 0 10px;margin:0 0 10px;/g, 'margin:0 0 10px;');
+    richTarget_.components(html);
+    markDirty();
+  });
+  return richQuill;
+}
+
+function renderRichText() {
+  const target = editor && richTarget(editor.getSelected());
+  const card = $('#richTextCard');
+  card.style.display = target ? 'block' : 'none';
+  if (!target) { richTarget_ = null; return; }
+  if (!initRichQuill()) return;
+  if (richTarget_ === target) return; // same cell: do not reset the caret while typing
+  richTarget_ = target;
+  richBusy = true;
+  richQuill.setContents(richQuill.clipboard.convert(target.getInnerHTML()), 'silent');
+  richBusy = false;
+}
+
+function renderCtaText() {
+  const sel = editor && editor.getSelected();
+  const target = ctaTarget(sel);
+  const card = $('#ctaTextCard');
+  card.style.display = target ? 'block' : 'none';
+  if (!target) return;
+  const c = ctaSettings(target);
+  if (document.activeElement !== $('#ctaTextInput')) $('#ctaTextInput').value = c.text;
+  if (document.activeElement !== $('#ctaLinkInput')) $('#ctaLinkInput').value = c.url;
+  if (document.activeElement !== $('#ctaFontInput')) $('#ctaFontInput').value = c.font;
+  loadCtaGoogleFont(c.font);
+}
+
+function buttonTarget(comp) {
+  if (!comp) return null;
+  const isButton = link => {
+    const style = { ...link.getAttributes(), ...link.getStyle() };
+    return (link.get('tagName') || '').toLowerCase() === 'a' &&
+      (link.getClasses().includes('lp-btn') || style.display === 'inline-block' || link.getAttributes().role === 'button');
+  };
+  for (let target = comp; target && target.get('type') !== 'wrapper'; target = target.parent()) {
+    if (isButton(target)) return target;
+  }
+  const buttons = comp.find('a').filter(isButton);
+  return buttons.length === 1 ? buttons[0] : null;
+}
+
+function renderButtonSettings() {
+  const target = buttonTarget(editor && editor.getSelected());
+  const card = $('#buttonSettingsCard');
+  card.style.display = target ? 'block' : 'none';
+  if (!target) return;
+  if (document.activeElement !== $('#buttonTextInput')) {
+    $('#buttonTextInput').value = target.getEl()?.textContent.trim() || '';
+  }
+  if (document.activeElement !== $('#buttonLinkInput')) {
+    $('#buttonLinkInput').value = target.getAttributes().href || '';
+  }
+  if (document.activeElement !== $('#buttonFontInput')) {
+    $('#buttonFontInput').value = fontFromStack(target.getStyle()['font-family'] || '');
+  }
+}
+
+function updateButtonText(target, text) {
+  const textNode = target.components().models.find(component => component.get('type') === 'textnode');
+  if (textNode) textNode.set('content', text);
+  else target.components().reset([{ type: 'textnode', content: text }]);
+  if (target.view) target.view.render();
+}
+
+function ctaFontStack(font) {
+  return GOOGLE_FONTS.includes(font) ? `'${font}',Arial,Helvetica,sans-serif` : 'Arial,Helvetica,sans-serif';
+}
+
+function fontFromStack(stack) {
+  return GOOGLE_FONTS.find(font => String(stack || '').includes(font)) || '';
+}
+
+function loadCtaGoogleFont(font) {
+  if (!editor) return;
+  const doc = editor.Canvas.getDocument();
+  if (!doc) return;
+  const id = 'lp-cta-google-font';
+  let link = doc.getElementById(id);
+  if (!GOOGLE_FONTS.includes(font)) { if (link) link.remove(); return; }
+  if (!link) { link = doc.createElement('link'); link.id = id; link.rel = 'stylesheet'; doc.head.appendChild(link); }
+  link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(font).replace(/%20/g, '+')}:wght@400;700&display=swap`;
+}
+
+const CTA_KEYS = ['email-cta', 'email-cta-signature', 'email-footer-signature'];
+
+// The CTA button a selection refers to: the button block itself, or the cell/row around exactly one button.
+function ctaTarget(comp) {
+  if (!IS_EMAIL || !comp) return null;
+  const isCta = c => c && CTA_KEYS.includes((c.getAttributes() || {})['data-lp-block']);
+  if (isCta(comp)) return comp;
+  const inside = comp.find('[data-lp-block]').filter(isCta);
+  if (inside.length === 1) return inside[0];
+  return null;
+}
+
+// Each CTA button keeps its own text / link / font on its placeholder (data-cta-*), so two buttons can differ.
+function ctaSettings(comp) {
+  const a = (comp && comp.getAttributes()) || {};
+  return {
+    text: a['data-cta-text'] != null ? a['data-cta-text'] : (META.cta_text || 'Download Now'),
+    url: a['data-cta-url'] != null ? a['data-cta-url'] : (META.cta_url || META.lp_url || ''),
+    font: a['data-cta-font'] != null ? a['data-cta-font'] : (META.cta_font || ''),
+  };
+}
+
+function applyCtaToHtml(source, text, url, font) {
+  return source.replace(/(<a\b[^>]*>)[\s\S]*?(<\/a>)/i, (m, open, close) => `${open}${esc(text)}${close}`)
+    .replace(/(<a\b[^>]*\bhref=")[^"]*("[^>]*>)/i, (m, a, b) => `${a}${esc(url || META.lp_url || '#')}${b}`)
+    .replace(/font-family:[^;"']*(?:'[^']*'[^;"']*)?/gi, `font-family:${ctaFontStack(font)}`);
+}
+
+function updateCtaPreview(comp) {
+  if (comp && comp.view) comp.view.render();
+}
+
+/* ---------------- Email width (whole email, centred) ---------------- */
+function emailContainer() { return editor && editor.getWrapper().find('.email-container')[0]; }
+function emailWidthNow() {
+  const c = emailContainer();
+  if (!c) return 0;
+  const st = c.getStyle(), at = c.getAttributes();
+  return parseInt(st.width, 10) || parseInt(at.width, 10) || (c.getEl() ? Math.round(c.getEl().getBoundingClientRect().width) : 0);
+}
+function renderEmailWidth() {
+  if (!IS_EMAIL) return;
+  $('#emailWidthCard').style.display = 'block';
+  const w = emailWidthNow() || '';
+  if (document.activeElement !== $('#emailWidthInput')) $('#emailWidthInput').value = w;
+  $('#emailWidthRange').value = w || 600;
+}
+function setEmailWidth(px) {
+  const c = emailContainer();
+  px = Math.max(320, Math.min(900, parseInt(px, 10) || 0));
+  if (!c || !px) return;
+  c.addAttributes({ width: String(px), align: 'center' });
+  c.addStyle({ width: px + 'px', 'max-width': '100%', 'margin-left': 'auto', 'margin-right': 'auto' });
+  $('#emailWidthRange').value = px;
+  markDirty();
+}
+
+function renderEmailBackground() {
+  if (!IS_EMAIL) return;
+  const color = META.body_background_color || '#f1f5f9';
+  $('#emailBackgroundCard').style.display = 'block';
+  $('#emailBackgroundInput').value = color;
+  const body = editor && editor.Canvas.getBody();
+  if (body) body.style.backgroundColor = color;
 }
 
 /* ---------------- Colour fields: native picker + quick palette ---------------- */
@@ -787,8 +1269,8 @@ async function openTemplates() {
     btn.disabled = true; btn.textContent = 'Loading…';
     const d = await (await fetch(`/api/campaigns/${SLUG}/library/${PAGE}/${card.dataset.id}`)).json();
     previousDesign = { project: editor.getProjectData(), base: BASE_CSS, template: TEMPLATE_ID };
-    editor.setComponents(d.html);
     editor.setStyle('');
+    editor.setComponents(d.html);
     BASE_CSS = d.css || '';
     TEMPLATE_ID = card.dataset.id;
     editor.UndoManager.clear(); // undo can't bring back the old design's stylesheet; "Restore previous design" does
@@ -864,7 +1346,12 @@ function lpPlugin(ed) {
     view: {
       onRender() {
         const key = this.model.getAttributes()['data-lp-block'];
-        const html = BLOCKS[key];
+        let html = BLOCKS[key];
+        const attrs = this.model.getAttributes();
+        if (html && IS_EMAIL && CTA_KEYS.includes(key) && ['data-cta-text', 'data-cta-url', 'data-cta-font'].some(k => attrs[k] != null)) {
+          const c = ctaSettings(this.model);
+          html = applyCtaToHtml(html, c.text, c.url, c.font);
+        }
         this.el.innerHTML = html
           ? `<div style="pointer-events:none">${html}</div>`
           : `<div style="pointer-events:none;padding:14px;border:1px dashed #94a3b8;color:#64748b;text-align:center;font:13px sans-serif">${LIVE_LABELS[key] || key}: nothing to show yet (set it up in the campaign builder)</div>`;
@@ -1452,19 +1939,24 @@ function openCode() {
 }
 
 /* ---------------- Init ---------------- */
+const SAFE_FONTS = [
+  ['Arial, Helvetica, sans-serif', 'Arial'], ['Georgia, serif', 'Georgia'], ['Verdana, Geneva, sans-serif', 'Verdana'],
+  ['Tahoma, Geneva, sans-serif', 'Tahoma'], ["'Trebuchet MS', Helvetica, sans-serif", 'Trebuchet MS'],
+  ["'Times New Roman', Times, serif", 'Times New Roman'], ["'Courier New', Courier, monospace", 'Courier New'],
+  ["'Palatino Linotype', Palatino, 'Book Antiqua', serif", 'Palatino'], ["'Lucida Sans Unicode', 'Lucida Grande', sans-serif", 'Lucida Sans'],
+  ["Garamond, 'Times New Roman', serif", 'Garamond'], ["Impact, Charcoal, sans-serif", 'Impact'],
+];
 const FONT_OPTIONS = [
   { id: '', label: 'Default' },
   { id: "'Segoe UI', Roboto, Arial, sans-serif", label: 'System' },
-  { id: 'Arial, Helvetica, sans-serif', label: 'Arial' },
-  { id: 'Georgia, serif', label: 'Georgia' },
-  { id: 'Verdana, sans-serif', label: 'Verdana' },
-  { id: 'Tahoma, sans-serif', label: 'Tahoma' },
-  ...(IS_EMAIL ? [] : ['Inter', 'Poppins', 'Roboto', 'Open Sans', 'Montserrat', 'Lato'].map(f => ({ id: `'${f}', sans-serif`, label: f }))),
+  ...SAFE_FONTS.map(([id, label]) => ({ id, label })),
+  ...GOOGLE_FONTS.map(f => ({ id: `'${f}', ${/Serif|Slab|Lora|Merriweather|Playfair|Alegreya|Baskerville|Crimson|Cormorant|Bitter/i.test(f) ? 'Georgia, serif' : 'Arial, sans-serif'}`, label: f + ' (web font)' })),
 ];
 
 // Canvas-only CSS: show hidden-per-device elements faded instead of removing them, and email canvas basics.
 const CANVAS_CSS = IS_EMAIL ? `
   body { background:#f1f5f9; padding:24px 10px; }
+  .email-container { margin-left:auto !important; margin-right:auto !important; }
   [data-lp-block] { display:block; }
   img { max-width:100%; }
   @media (max-width:620px) {
@@ -1522,9 +2014,21 @@ function updateDevNote() {
 }
 
 async function init() {
-  const data = await (await fetch(`/api/campaigns/${SLUG}/visual/${PAGE}`)).json();
+  const res0 = await fetch(`/api/campaigns/${SLUG}/visual/${PAGE}`);
+  if (!res0.ok) {
+    const txt = (await res0.text()).slice(0, 600);
+    throw new Error(`Server returned ${res0.status} for /visual/${PAGE}. Check the Flask terminal for the traceback.\n${txt}`);
+  }
+  const data = await res0.json();
+  // A saved design with no components (e.g. an empty save) would show a blank canvas: fall back to the seed layout.
+  const projectHasContent = !!data.project && JSON.stringify(data.project.pages || []).includes('"components"');
+  if (data.project && !projectHasContent && data.seed == null) data.seed = '';
+  if (!projectHasContent) data.project = null;
   BLOCKS = data.blocks || {};
   META = data.meta || {};
+  const fontOptions = '<option value="">Default (Arial)</option>' + GOOGLE_FONTS.map(font => `<option value="${esc(font)}">${esc(font)}</option>`).join('');
+  $('#ctaFontInput').innerHTML = fontOptions;
+  $('#buttonFontInput').innerHTML = fontOptions;
   FORM = data.form || {};
   CUSTOM = data.custom || {};
   BASE_CSS = data.base_css || '';
@@ -1541,7 +2045,7 @@ async function init() {
     storageManager: false,
     panels: { defaults: [] },
     projectData: data.project || { pages: [{ component: data.seed || '' }] },
-    canvas: { styles: IS_EMAIL ? [] : [`/c/${SLUG}/landing-page/assets/style.css?v=${Date.now()}`, fonts] },
+    canvas: { styles: IS_EMAIL ? [`https://fonts.googleapis.com/css2?${GOOGLE_FONTS.map(f => 'family=' + encodeURIComponent(f).replace(/%20/g, '+') + ':wght@400;700').join('&')}&display=swap`] : [`/c/${SLUG}/landing-page/assets/style.css?v=${Date.now()}`, fonts] },
     canvasCss: CANVAS_CSS,
     plugins: [lpPlugin],
     blockManager: { appendTo: '#blocks' },
@@ -1556,7 +2060,7 @@ async function init() {
       sectors: [
         { name: 'Typography', open: true, properties: [
           { extend: 'font-family', options: FONT_OPTIONS }, 'font-size', 'font-weight', 'color', 'line-height', 'letter-spacing',
-          'text-align', 'text-transform', 'text-decoration', 'font-style', 'text-shadow'] },
+          'text-transform', 'text-decoration', 'font-style', 'text-shadow'] },
         { name: 'Background', open: true, properties: ['background-color', 'background'] },
         { name: 'Border & shadow', open: false, properties: ['border', 'border-radius', 'box-shadow'] },
         { name: 'Spacing (exact values)', open: false, properties: ['margin', 'padding'] },
@@ -1566,6 +2070,13 @@ async function init() {
       ],
     },
   });
+
+  // Load the campaign content explicitly after GrapesJS is initialized.
+  // This is important for the Email editor because projectData can be empty
+  // when the backend returns a seed HTML layout instead of saved project JSON.
+  if (!data.project && data.seed) {
+    editor.setComponents(data.seed);
+  }
 
   editor.Commands.add('lp:add', { run(ed) { openAdd(ed.getSelected()); } });
   addBlocks(editor.BlockManager);
@@ -1582,8 +2093,15 @@ async function init() {
     if (!seen) setTimeout(openHelp, 400);
     setState(data.project ? 'Saved design loaded' : BASE_CSS ? 'Ready-made design loaded' : 'Starting layout from the campaign builder', 'ok');
     $('#open').href = PAGE_URL;
+    renderEmailBackground();
+    renderEmailWidth();
   });
   editor.on('update', () => { if (editor.getDirtyCount()) markDirty(); });
+  editor.on('component:dblclick', c => {
+    const cta = ctaTarget(c);
+    if (cta) { editor.select(cta); setTimeout(() => { const t = $('#ctaTextInput'); showPane('layout'); t.focus(); t.select(); }, 80); return; }
+    const t = liveTarget(c); if (t && t === c) convertLive(t);
+  });
 
   // Elementor-style: selecting an element opens its Style panel.
   editor.on('component:toggled', () => {
@@ -1595,12 +2113,21 @@ async function init() {
     renderSpacing();
     renderAdvanced();
     renderCrumbs();
+    renderTextAlign();
+    renderCtaText();
+    renderLiveEdit();
+    renderRichText();
+    renderCard();
+    renderButtonSettings();
     if (sel) enhanceSelected(sel);
-    showPane(sel && sel.get('type') !== 'wrapper' ? (currentPane === 'blocks' ? 'layout' : currentPane) : 'blocks');
+    showPane(sel && sel.get('type') !== 'wrapper' ? ((currentPane === 'blocks' || ctaTarget(sel) || richTarget(sel) || (liveTarget(sel) === sel)) ? 'layout' : currentPane) : 'blocks');
     updateDevNote();
+    if (sel && ctaTarget(sel)) {
+      setTimeout(() => { const t = $('#ctaTextInput'); t.focus(); t.select(); }, 60);
+    }
   });
   editor.on('change:device', () => { updateDevNote(); setTimeout(renderSpacing, 400); });
-  editor.on('component:styleUpdate', () => { if (!spDrag) { renderSpacing(); renderLayout(); } });
+  editor.on('component:styleUpdate', c => { convertCellMargin(c); renderTextAlign(); if (!spDrag) { renderSpacing(); renderLayout(); } });
   setupSpacing();
   setupLayout();
   requestAnimationFrame(overlayLoop);
@@ -1629,6 +2156,58 @@ function showPane(name) {
   if (name === 'layout') renderLayout();
 }
 $$('#tabs button').forEach(b => b.onclick = () => showPane(b.dataset.pane));
+function selectedCta() { return ctaTarget(editor.getSelected()); }
+function setCtaAttr(attr, value) {
+  const comp = selectedCta();
+  if (!comp) return;
+  // keep the other fields pinned to this button too, so a later global change cannot alter it
+  const c = ctaSettings(comp);
+  comp.addAttributes({ 'data-cta-text': c.text, 'data-cta-url': c.url, 'data-cta-font': c.font, [attr]: value });
+  updateCtaPreview(comp);
+  const first = editor.getWrapper().find('[data-lp-block^="email-cta"]')[0];
+  if (first === comp) { META.cta_text = ctaSettings(comp).text; META.cta_url = ctaSettings(comp).url; META.cta_font = ctaSettings(comp).font; }
+  markDirty();
+}
+$('#ctaTextInput').addEventListener('input', e => setCtaAttr('data-cta-text', e.target.value));
+$('#ctaLinkInput').addEventListener('change', e => setCtaAttr('data-cta-url', e.target.value.trim()));
+$('#ctaFontInput').addEventListener('change', e => { setCtaAttr('data-cta-font', e.target.value); loadCtaGoogleFont(e.target.value); });
+$('#buttonTextInput').addEventListener('input', e => {
+  const target = buttonTarget(editor.getSelected());
+  if (!target) return;
+  updateButtonText(target, e.target.value);
+  markDirty();
+});
+$('#buttonLinkInput').addEventListener('change', e => {
+  const target = buttonTarget(editor.getSelected());
+  if (!target) return;
+  const href = e.target.value.trim();
+  if (href) target.addAttributes({ href });
+  else target.removeAttributes('href');
+  markDirty();
+});
+$('#buttonFontInput').addEventListener('change', e => {
+  const target = buttonTarget(editor.getSelected());
+  if (!target) return;
+  const style = { ...target.getStyle() };
+  if (e.target.value) style['font-family'] = ctaFontStack(e.target.value);
+  else delete style['font-family'];
+  target.setStyle(style);
+  loadCtaGoogleFont(e.target.value);
+  markDirty();
+});
+$('#emailWidthInput').addEventListener('input', e => { if (e.target.value) setEmailWidth(e.target.value); });
+$('#emailWidthRange').addEventListener('input', e => { setEmailWidth(e.target.value); $('#emailWidthInput').value = e.target.value; });
+$('#emailBackgroundInput').addEventListener('input', e => {
+  META.body_background_color = e.target.value;
+  renderEmailBackground();
+  markDirty();
+});
+$$('#textAlignCard [data-align]').forEach(button => button.onclick = () => {
+  const target = alignmentTarget(editor.getSelected());
+  if (!target) return;
+  target.setStyle({ ...target.getStyle(), 'text-align': button.dataset.align });
+  renderTextAlign();
+});
 
 $('#search').oninput = e => {
   const q = e.target.value.toLowerCase();
@@ -1696,6 +2275,8 @@ $('#stClose').onclick = () => toggleStructure(false);
   document.addEventListener('mouseup', () => { start = null; });
 })();
 $('#tplBtn').onclick = openTemplates;
+['cardRadius', 'cardTop', 'cardBottom', 'cardSide'].forEach(id => $('#' + id).addEventListener('input', onCardInput));
+$('#liveEditBtn').onclick = () => convertLive(liveTarget(editor.getSelected()));
 if (IS_EMAIL) { $('#formBtn').style.display = 'none'; $('#devices [data-device=tablet]').style.display = 'none'; }
 $('#reset').onclick = async () => {
   if (!confirm('Discard this visual design and start again from the standard layout? This cannot be undone.')) return;
@@ -1714,6 +2295,10 @@ async function save() {
       css: editor.getCss({ avoidProtected: true }),
       base_css: BASE_CSS,
       template: TEMPLATE_ID,
+      ...(IS_EMAIL ? { email_cta_text: META.cta_text || 'Download Now' } : {}),
+      ...(IS_EMAIL ? { email_cta_url: META.cta_url || '' } : {}),
+      ...(IS_EMAIL ? { email_cta_font: META.cta_font || '' } : {}),
+      ...(IS_EMAIL ? { email_body_background_color: META.body_background_color || '#f1f5f9' } : {}),
       ...CUSTOM,
     };
     const r = await fetch(`/api/campaigns/${SLUG}/visual/${PAGE}`, {
@@ -1732,7 +2317,12 @@ async function save() {
 $('#save').onclick = save;
 window.addEventListener('beforeunload', e => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
 
-init().catch(err => setState('Failed to load: ' + err.message, 'err'));
+init().catch(err => {
+  console.error(err);
+  setState('Failed to load: ' + err.message, 'err');
+  const g = document.getElementById('gjs');
+  if (g) g.innerHTML = '<pre style="margin:24px;padding:16px;background:#fff;border:1px solid #fca5a5;border-radius:8px;color:#b91c1c;white-space:pre-wrap;font:13px/1.5 monospace">Editor failed to load\n\n' + String(err.message || err).replace(/</g, '&lt;') + '</pre>';
+});
 </script>
 </body>
 </html>

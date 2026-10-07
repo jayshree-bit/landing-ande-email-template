@@ -1,0 +1,63 @@
+{% set F = "font-family:Arial,Helvetica,sans-serif;" %}
+<div class="email-container" style="max-width:600px;margin:0 auto;background-color:#ffffff;overflow:hidden;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr><td align="center" style="padding:22px 16px 0;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid #d9d9d9;">
+        <tr>
+          {% if files.logo %}<td width="65%" valign="middle" align="left" style="width:65%;padding:14px 8px 0 0;">
+            <img src="{{ img_base }}{{ files.logo }}" width="280" alt="{{ company.name or campaign_name }}" style="display:block;width:100%;max-width:280px;height:auto;">
+          </td>{% endif %}
+          {% if files.partner_logo %}<td width="35%" valign="middle" align="right" style="width:35%;padding:14px 0 0 8px;">
+            <img src="{{ img_base }}{{ files.partner_logo }}" width="143" alt="{{ partner_name or 'Partner' }}" style="display:block;width:100%;max-width:143px;height:auto;margin-left:auto;">
+          </td>{% endif %}
+        </tr>
+      </table>
+    </td></tr>
+    <tr><td align="center" style="padding:22px 10px 0;{{ F }}font-size:16px;line-height:20px;color:#333333;">Explore the Signature Collection</td></tr>
+    <tr><td align="center" style="padding:12px 18px 0;font-family:'Times New Roman',Times,serif;font-size:23px;line-height:27px;color:#333333;">{{ t.signature_headline }}</td></tr>
+    <tr><td class="px" style="padding:18px 20px 0;font-family:'Times New Roman',Times,serif;font-size:18px;line-height:24px;font-weight:bold;color:#333333;">{{ t.signature_greeting }}</td></tr>
+    <tr><td class="px" style="padding:18px 20px 0;font-family:'Times New Roman',Times,serif;font-size:18px;line-height:24px;font-weight:bold;color:#333333;">{{ t.signature_question }}</td></tr>
+    {% for paragraph in t.signature_body %}
+    <tr><td class="px" style="padding:22px 20px 0;{{ F }}font-size:16px;line-height:23px;color:#333333;">{{ paragraph }}</td></tr>
+    {% endfor %}
+    {% if t.signature_author_image %}<tr><td style="padding:22px 20px 0;">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+        <td valign="middle" style="padding-right:10px;"><img src="{{ t.signature_author_image }}" width="80" height="80" alt="Chana Schoenberger, Editor-in-Chief, American Banker" style="display:block;width:80px;height:80px;object-fit:cover;"></td>
+        <td valign="middle" style="{{ F }}font-size:14px;line-height:21px;color:#333333;">
+          <strong>Chana Schoenberger</strong><br>Editor-in-Chief<br><em>American Banker</em>
+        </td>
+      </tr></table>
+    </td></tr>{% endif %}
+    {% if email.signoff %}<tr><td style="padding:20px 10px 24px;"><div data-lp-block="email-signoff"></div></td></tr>{% endif %}
+    <tr><td align="center" style="padding:0 15px 24px;"><div data-lp-block="email-cta-signature"></div></td></tr>
+  </table>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr><td align="center" style="padding:0 12px 18px;font-family:'Times New Roman',Times,serif;font-size:24px;line-height:29px;font-weight:bold;color:#000000;">
+      This Signature Collection Includes
+    </td></tr>
+    {% for item in t.signature_articles[:4] %}
+    {% if loop.index0 is divisibleby 2 %}<tr>{% endif %}
+    <td class="stack" width="50%" valign="top" style="width:50%;padding:5px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #d8d8d8;background-color:#ffffff;">
+        {% if item.image %}<tr><td style="padding:0;"><img src="{{ item.image }}" width="278" alt="Article image" style="display:block;width:100%;max-width:278px;height:auto;"></td></tr>{% elif files.banner %}<tr><td style="padding:0;"><img src="{{ img_base }}{{ files.banner }}" width="278" alt="" style="display:block;width:100%;max-width:278px;height:auto;"></td></tr>{% endif %}
+        <tr><td style="padding:10px 8px 0;{{ F }}font-size:11px;line-height:14px;font-weight:bold;color:#555555;">
+          <a href="{{ item.url }}" target="_blank" style="color:#555555;text-decoration:none;">SIGNATURE COLLECTION</a>
+        </td></tr>
+        <tr><td style="padding:5px 8px;">
+          <a href="{{ item.url }}" target="_blank" style="font-family:Roboto,Arial,sans-serif;font-size:14px;line-height:20px;font-weight:bold;color:#000000;text-decoration:none;">{{ item.title }}</a>
+        </td></tr>
+        {% if item.byline %}<tr><td style="padding:0 8px 10px;{{ F }}font-size:12px;line-height:17px;color:#555555;">By {{ item.byline }}</td></tr>{% endif %}
+      </table>
+    </td>
+    {% if loop.index is divisibleby 2 or loop.last %}</tr>{% endif %}
+    {% endfor %}
+    <tr><td colspan="2" align="center" style="padding:25px 16px;background-color:#1969a0;font-family:Arial,sans-serif;font-size:16px;line-height:22px;color:#ffffff;">
+      Hurry - claim your complimentary access today.
+    </td></tr>
+    <tr><td colspan="2" align="center" style="padding:25px 18px 8px;{{ F }}font-size:16px;line-height:23px;font-weight:bold;color:#333333;">
+      Unlock complimentary access to critical insights for a new age of banking.
+    </td></tr>
+    <tr><td colspan="2" align="center" style="padding:8px 15px 26px;"><div data-lp-block="email-cta-signature"></div></td></tr>
+  </table>
+  <div data-lp-block="email-footer-signature"></div>
+</div>

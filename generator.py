@@ -3,6 +3,7 @@ import html
 import json
 import re
 import shutil
+import threading
 import zipfile
 from pathlib import Path
 
@@ -12,6 +13,9 @@ from markupsafe import Markup
 BASE = Path(__file__).parent
 CAMPAIGNS = BASE / "data" / "campaigns"
 GENERATED = BASE / "generated"
+
+# Prevent concurrent requests from deleting/rebuilding the same generated bundle.
+BUILD_LOCK = threading.RLock()
 
 env = Environment(
     loader=FileSystemLoader(BASE / "output_templates"),
@@ -181,7 +185,14 @@ LAYOUT_DEFAULTS = {
     "footer_logo_bg": "white",
 }
 
-GOOGLE_FONTS = {"Inter", "Poppins", "Roboto", "Open Sans", "Montserrat", "Lato"}
+GOOGLE_FONTS = {
+    "Alegreya", "Archivo", "Arimo", "Assistant", "Barlow", "Cabin", "DM Sans", "DM Serif Display",
+    "Fira Sans", "IBM Plex Sans", "Inter", "Lato", "Lora", "Manrope", "Merriweather", "Montserrat",
+    "Mulish", "Nunito", "Nunito Sans", "Open Sans", "Oswald", "Playfair Display", "Poppins", "PT Sans",
+    "Raleway", "Roboto", "Roboto Slab", "Rubik", "Source Sans 3", "Source Serif 4", "Ubuntu", "Work Sans",
+    "Bitter", "Crimson Text", "Cormorant Garamond", "Figtree", "Josefin Sans", "Karla", "Libre Baskerville",
+    "Noto Sans", "Noto Serif", "Outfit", "Plus Jakarta Sans", "Quicksand", "Space Grotesk",
+}
 
 
 def campaign_dir(slug):
@@ -250,11 +261,14 @@ def context_from_cfg(cfg, slug, public_base):
     if not files.get("banner"):
         layout["header_style"], layout["hero_text"] = "solid", False
     font = cfg["brand"].get("font") or ""
+    cta_font = cfg["email"].get("cta_font") or ""
     ctx = dict(cfg, files=files, primary=primary, form_action=form_action, lp_url=lp_url,
                img_base=img_base, hosted=hosted, layout=layout,
                btn_text=cfg["brand"].get("button_text_color") or "#ffffff",
                font_family=f"'{font}', 'Segoe UI', Arial, sans-serif" if font else "",
-               google_font=font if font in GOOGLE_FONTS else "")
+               google_font=font if font in GOOGLE_FONTS else "",
+               google_fonts=sorted(GOOGLE_FONTS),
+               cta_font_family=f"'{cta_font}',Arial,Helvetica,sans-serif" if cta_font in GOOGLE_FONTS else "Arial,Helvetica,sans-serif")
     ctx["js_config"] = {
         "formAction": form_action,
         "thankYouUrl": "thank-you.html",
@@ -267,52 +281,52 @@ def context_from_cfg(cfg, slug, public_base):
 
 def build(slug, public_base):
     """Render the campaign into generated/<slug>/ and return the zip path."""
-    cfg, ctx = build_context(slug, public_base)
-    src = campaign_dir(slug) / "uploads"
+    with BUILD_LOCK:
+            cfg, ctx = build_context(slug, public_base)
+            src = campaign_dir(slug) / "uploads"
 
-    out = GENERATED / slug
-    if out.exists():
-        shutil.rmtree(out)
-    lp, em = out / "landing-page", out / "email-template"
-    (lp / "assets").mkdir(parents=True)
-    (em / "images").mkdir(parents=True)
+            out = GENERATED / slug
+            if out.exists():
+                shutil.rmtree(out)
+            lp, em = out / "landing-page", out / "email-template"
+            (lp / "assets").mkdir(parents=True)
+            (em / "images").mkdir(parents=True)
 
-    for role, name in ctx["files"].items():
-        if not (src / name).exists():
-            continue
-        shutil.copy(src / name, lp / "assets" / name)
-        if role != "pdf":
-            shutil.copy(src / name, em / "images" / name)
-    if (src / "media").is_dir():  # images uploaded in the visual editor
-        shutil.copytree(src / "media", lp / "assets" / "media")
-        shutil.copytree(src / "media", em / "images" / "media")
+            for role, name in ctx["files"].items():
+                if not (src / name).exists():
+                    continue
+                shutil.copy(src / name, lp / "assets" / name)
+                if role != "pdf":
+                    shutil.copy(src / name, em / "images" / name)
+            if (src / "media").is_dir():  # images uploaded in the visual editor
+                shutil.copytree(src / "media", lp / "assets" / "media")
+                shutil.copytree(src / "media", em / "images" / "media")
 
-    def render(template, dest, **extra):
-        dest.write_text(env.get_template(template).render(**ctx, **extra), encoding="utf-8")
+            def render(template, dest, **extra):
+                dest.write_text(env.get_template(template).render(**ctx, **extra), encoding="utf-8")
 
-    for page, template, dest in (("landing", "landing.html", "index.html"), ("thankyou", "thankyou.html", "thank-you.html")):
-        design = load_visual(slug, page) if cfg["visual"].get(page) else None
-        if design:
-            css = relative_urls(design.get("base_css", "") + "\n" + design.get("css", "") + custom_css(design), slug)
-            render(template, lp / dest, visual_body=Markup(visual_body(design["html"], slug, ctx)), visual_css=Markup(css),
-                   visual_js=Markup(design.get("custom_js") or ""),
-                   visual_fonts=sorted(f for f in GOOGLE_FONTS if f in css and f != ctx["google_font"]))
-        else:
-            render(template, lp / dest)
-    render("style.css", lp / "assets" / "style.css")
-    render("script.js", lp / "assets" / "script.js")
-    render("effects.js", lp / "assets" / "effects.js")
+            for page, template, dest in (("landing", "landing.html", "index.html"), ("thankyou", "thankyou.html", "thank-you.html")):
+                design = load_visual(slug, page) if cfg["visual"].get(page) else None
+                if design:
+                    css = relative_urls(design.get("base_css", "") + "\n" + design.get("css", "") + custom_css(design), slug)
+                    render(template, lp / dest, visual_body=Markup(visual_body(design["html"], slug, ctx)), visual_css=Markup(css),
+                           visual_js=Markup(design.get("custom_js") or ""),
+                           visual_fonts=sorted(f for f in GOOGLE_FONTS if f in css and f != ctx["google_font"]))
+                else:
+                    render(template, lp / dest)
+            render("style.css", lp / "assets" / "style.css")
+            render("script.js", lp / "assets" / "script.js")
+            render("effects.js", lp / "assets" / "effects.js")
 
-    design = load_visual(slug, "email") if cfg["visual"].get("email") else None
-    if design:
-        body, css = email_visual(design, slug, ctx)
-        render("email_visual.html", em / "email.html", visual_body=Markup(body), visual_css=Markup(css))
-    else:
-        render("email.html", em / "email.html")
-    render("email.txt", em / "email.txt")
+            design = load_visual(slug, "email") if cfg["visual"].get("email") else None
+            if design:
+                body, css = email_visual(design, slug, ctx)
+                render("email_visual.html", em / "email.html", visual_body=Markup(body), visual_css=Markup(css))
+            else:
+                render("email.html", em / "email.html")
+            render("email.txt", em / "email.txt")
 
-    return make_zip(slug)
-
+            return make_zip(slug)
 
 # ---------------------------------------------------------------- visual (drag & drop) editor
 
@@ -392,15 +406,42 @@ def render_blocks(ctx):
         "email-banner": str(mail.email_banner()),
         "email-content": str(mail.email_body()),
         "email-cta": str(mail.email_cta()),
+        "email-cta-signature": str(mail.email_cta_signature()),
         "email-signoff": str(mail.email_signoff()),
         "email-footer": str(mail.email_footer()),
+        "email-footer-signature": str(mail.email_footer_signature()),
     }
 
 
 def fill_blocks(html_text, ctx):
     html_text = re.sub(r"^\s*<body[^>]*>|</body>\s*$", "", html_text.strip())
     blocks = render_blocks(ctx)
-    return BLOCK_RE.sub(lambda m: f"<div{m.group(1)}>{blocks.get(m.group(2), '')}</div>", html_text)
+
+    def fill(m):
+        attrs, key = m.group(1), m.group(2)
+        block = blocks.get(key, "")
+        if key in ("email-cta", "email-cta-signature", "email-footer-signature"):
+            block = _apply_cta_overrides(block, attrs)
+        return f"<div{attrs}>{block}</div>"
+
+    return BLOCK_RE.sub(fill, html_text)
+
+
+def _apply_cta_overrides(block, attrs):
+    """Each CTA button can carry its own text / link / font (data-cta-* on its placeholder)."""
+    def attr(name):
+        m = re.search(rf'\sdata-cta-{name}="([^"]*)"', " " + attrs)
+        return html.unescape(m.group(1)) if m else None
+
+    text, url, font = attr("text"), attr("url"), attr("font")
+    if text is not None:
+        block = re.sub(r"(<a\b[^>]*>)[\s\S]*?(</a>)", lambda m: m.group(1) + html.escape(text) + m.group(2), block, count=1, flags=re.I)
+    if url:
+        block = re.sub(r'(<a\b[^>]*\bhref=")[^"]*("[^>]*>)', lambda m: m.group(1) + html.escape(url) + m.group(2), block, count=1, flags=re.I)
+    if font is not None:
+        stack = f"'{font}',Arial,Helvetica,sans-serif" if font in GOOGLE_FONTS else "Arial,Helvetica,sans-serif"
+        block = re.sub(r"font-family:[^;\"']*(?:'[^']*'[^;\"']*)?", lambda m: f"font-family:{stack}", block, flags=re.I)
+    return block
 
 
 def visual_body(html_text, slug, ctx):
@@ -528,6 +569,7 @@ TEMPLATE_LIBRARY = {
     "email": [
         ("classic", "Classic", "Logos, banner, message, button and footer."),
         ("hero", "Hero banner", "Big banner, centred headline, button and a benefits list."),
+        ("signature", "Signature Collection", "Editorial article highlights, partner branding and a prominent access CTA."),
         ("newsletter", "Newsletter", "Coloured title band and image + text rows."),
         ("letter", "Personal letter", "Plain, personal-style email with a text link."),
         ("dark", "Bold header", "Dark headline band with a highlight box."),
@@ -573,6 +615,51 @@ def template_text(cfg):
     ]
     intro = (_paragraphs(lp.get("body")) or ["Find out how leading teams tackle this challenge, with clear guidance you can put to work straight away."])[0]
     email_intro = (_paragraphs(em.get("body")) or [intro])[0]
+    signature_lines = [re.sub(r"\s+", " ", line).strip() for line in plain(em.get("body")).splitlines() if line.strip()]
+    first_line = signature_lines[0].casefold() if signature_lines else ""
+    known_intro = ["explore the signature collection", em.get("headline") or lp.get("headline") or cfg.get("campaign_name") or "", em.get("greeting") or ""]
+    if any(value and first_line.startswith(value.casefold()) for value in known_intro):
+        signature_lines = signature_lines[1:]
+    question = ""
+    if signature_lines and "?" in signature_lines[0]:
+        question, remainder = signature_lines[0].split("?", 1)
+        question = question.strip() + "?"
+        signature_lines[0] = remainder.strip()
+        signature_lines = [line for line in signature_lines if line]
+    signature_articles = bullets
+    if not _bullets(lp.get("body")):
+        signature_articles = [
+            sentence.strip()
+            for line in signature_lines
+            for sentence in re.split(r"(?<=[.!?])\s+", line)
+            if len(sentence.strip()) > 30
+        ][:4] or bullets
+    reference_articles = [
+        {
+            "image": "https://arizent.brightspotcdn.com/dims4/default/d36713d/2147483647/strip/true/crop/1381x800+19+0/resize/302x175!/quality/90/?url=https%3A%2F%2Fsource-media-brightspot.s3.us-east-1.amazonaws.com%2F8c%2Fe4%2Fbb1a44fe4b5e930f8ccd20a6b4c1%2Fai-100-leaders.jpg",
+            "title": "Fraud, productivity are top of mind for AI thought leaders in banks",
+            "byline": "Penny Crosman",
+            "url": "https://www.americanbanker.com/articlelist/artificial-intelligence-and-generative-ai-in-banking-use-cases-opportunities-and-threats#article-1",
+        },
+        {
+            "image": "https://arizent.brightspotcdn.com/dims4/default/bbeb411/2147483647/strip/true/crop/3998x2317+0+175/resize/302x175!/quality/90/?url=https%3A%2F%2Fsource-media-brightspot.s3.us-east-1.amazonaws.com%2Ff5%2F52%2Fbc510d0f444bbb486539280896a5%2F402196825.jpg",
+            "title": "A third of banks ban employees from using gen AI. Here's why.",
+            "byline": "Penny Crosman",
+            "url": "https://www.americanbanker.com/articlelist/artificial-intelligence-and-generative-ai-in-banking-use-cases-opportunities-and-threats#article-2",
+        },
+        {
+            "image": "https://valasysb2bmarketing.com/Valasys-AI/Newsletter/Images/callSummary.jpg",
+            "title": "Call summaries, co-pilots, cores: Use cases for generative AI",
+            "byline": "Penny Crosman",
+            "url": "https://www.americanbanker.com/articlelist/artificial-intelligence-and-generative-ai-in-banking-use-cases-opportunities-and-threats#article-3",
+        },
+        {
+            "image": "https://valasysb2bmarketing.com/Valasys-AI/Newsletter/Images/Reimagined.jpg",
+            "title": "A Reimagined Future of Possibilities: GenAI's Role in Banking, Financial Services and Insurance",
+            "byline": "",
+            "url": "https://arizent.brightspotcdn.com/c2/28/4120c3ab42168ccbac9fdc357915/a-reimagined-future-of-possibilities.pdf",
+        },
+    ]
     return {
         "eyebrow": lp.get("eyebrow") or "Free resource",
         "headline": lp.get("headline") or cfg.get("campaign_name") or "Your headline goes here",
@@ -586,6 +673,15 @@ def template_text(cfg):
         "email_greeting": em.get("greeting") or "Hi there,",
         "email_intro": email_intro,
         "email_cta": em.get("cta_text") or "Download Now",
+        "signature_headline": em.get("headline") or lp.get("headline") or cfg.get("campaign_name") or "Your headline goes here",
+        "signature_greeting": em.get("greeting") or "Hi {fname},",
+        "signature_question": question or "Explore the latest insights and practical opportunities in this field.",
+        "signature_body": signature_lines or [email_intro],
+        "signature_articles": reference_articles if "artificial intelligence" in (cfg.get("campaign_name") or "").casefold() else [
+            {"image": "", "title": item, "byline": co.get("name") or cfg.get("campaign_name") or "", "url": em.get("cta_url") or "#"}
+            for item in signature_articles
+        ],
+        "signature_author_image": "https://arizent.s3.amazonaws.com/guids/CABINET_32fe7ee323d3548cb5cef30ca75650162301ef468ea7024a454da1efd39f5bce/images/eic_ab_qyq.png" if "artificial intelligence" in (cfg.get("campaign_name") or "").casefold() else "",
         "company": co.get("name") or "Your Company",
         "website": co.get("website") or "",
     }
@@ -659,13 +755,24 @@ ZIP_PARTS = {"landing": "landing-page", "email": "email-template"}
 
 
 def make_zip(slug, part=None):
-    """Zip the whole bundle, or only the landing page / email folder."""
-    out = GENERATED / slug
-    root = out / ZIP_PARTS[part] if part in ZIP_PARTS else out
-    name = f"{slug}-{ZIP_PARTS[part]}" if part in ZIP_PARTS else slug
-    zip_path = GENERATED / f"{name}.zip"
-    with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as z:
-        for p in root.rglob("*"):
-            if p.is_file():
-                z.write(p, Path(name) / p.relative_to(root))
-    return zip_path
+    """Zip the whole bundle, or only the landing page / email folder.
+
+    The same lock is used by build() so a concurrent Flask request cannot
+    remove generated files while another request is creating the ZIP.
+    """
+    with BUILD_LOCK:
+        out = GENERATED / slug
+        root = out / ZIP_PARTS[part] if part in ZIP_PARTS else out
+        name = f"{slug}-{ZIP_PARTS[part]}" if part in ZIP_PARTS else slug
+        zip_path = GENERATED / f"{name}.zip"
+
+        if not root.exists():
+            raise FileNotFoundError(f"Generated bundle not found: {root}")
+
+        with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as z:
+            for p in root.rglob("*"):
+                if p.is_file():
+                    # The file may only be considered after the lock prevents
+                    # another build from deleting/replacing the tree.
+                    z.write(p, Path(name) / p.relative_to(root))
+        return zip_path

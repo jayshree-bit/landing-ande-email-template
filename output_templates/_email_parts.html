@@ -21,6 +21,32 @@
           </tr></table>
 {% endmacro %}
 
+{% macro email_footer_signature() %}
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#ffffff;">
+            <tr><td style="padding:24px 0 0;"><div style="border-top:1px solid #cccccc;font-size:0;line-height:0;">&nbsp;</div></td></tr>
+            <tr><td align="center" style="padding:28px 20px 14px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:21px;font-weight:bold;color:#808080;">
+              More From American Banker
+            </td></tr>
+            <tr><td align="center" style="padding:0 20px 16px;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:20px;color:#0875a1;">
+              <a href="https://www.facebook.com/AmericanBanker" target="_blank" style="color:#0875a1;text-decoration:none;font-weight:bold;">Facebook</a>
+              &nbsp;&nbsp;<a href="https://twitter.com/amerbanker" target="_blank" style="color:#0875a1;text-decoration:none;font-weight:bold;">Twitter</a>
+              &nbsp;&nbsp;<a href="https://www.linkedin.com/company/american-banker/" target="_blank" style="color:#0875a1;text-decoration:none;font-weight:bold;">LinkedIn</a>
+            </td></tr>
+            <tr><td align="center" style="padding:12px 20px 0;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:21px;color:#808080;">
+              <a href="https://www.arizent.com/about-us" target="_blank" style="color:#808080;text-decoration:none;">About Us</a>
+              &nbsp;|&nbsp; <a href="https://www.arizent.com/contact-us" target="_blank" style="color:#808080;text-decoration:none;">Contact Us</a>
+              &nbsp;|&nbsp; <a href="https://www.arizent.com/privacypolicy" target="_blank" style="color:#808080;text-decoration:underline;">Privacy Policy</a>
+            </td></tr>
+            <tr><td align="center" style="padding:28px 20px 18px;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:18px;color:#808080;">
+              <strong>Arizent</strong><br>One State Street Plaza, 27th Floor<br>New York, NY 10004
+            </td></tr>
+            <tr><td align="center" style="padding:0 20px 24px;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:18px;color:#808080;">
+              If you believe this has been sent to you in error, please
+              <a href="{{ (email or {}).get('unsubscribe_url') or 'http://162.241.200.228/V-Mail/unsubscribe.php' }}" target="_blank" style="color:#0875a1;text-decoration:underline;">Unsubscribe</a>.
+            </td></tr>
+          </table>
+{% endmacro %}
+
 {% macro email_banner() %}{% set e = email or {} %}{% set b = brand or {} %}{% set font = "Arial,Helvetica,sans-serif" %}{% set ft = b.footer_text_color or '#cbd5e1' %}
           {% if files.banner %}
           <!-- Banner -->
@@ -47,19 +73,27 @@
           </tr></table>
 {% endmacro %}
 
-{% macro email_cta() %}{% set e = email or {} %}{% set b = brand or {} %}{% set font = "Arial,Helvetica,sans-serif" %}{% set ft = b.footer_text_color or '#cbd5e1' %}
+{% macro email_cta() %}{% set e = email or {} %}{% set b = brand or {} %}{% set font = cta_font_family %}{% set ft = b.footer_text_color or '#cbd5e1' %}
           <!-- CTA button (bulletproof, incl. Outlook VML) -->
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
             <td align="center" class="px" style="padding:8px 40px 28px 40px;">
               <!--[if mso]>
               <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{ lp_url }}" style="height:48px;v-text-anchor:middle;width:280px;" arcsize="12%" stroke="f" fillcolor="{{ primary }}">
                 <w:anchorlock/>
-                <center style="color:{{ btn_text }};font-family:Arial,sans-serif;font-size:16px;font-weight:bold;">{{ e.cta_text or 'Download Now' }}</center>
+                <center style="color:{{ btn_text }};font-family:{{ font }};font-size:16px;font-weight:bold;">{{ e.cta_text or 'Download Now' }}</center>
               </v:roundrect>
               <![endif]-->
               <!--[if !mso]><!-- -->
               <a href="{{ lp_url }}" target="_blank" style="display:inline-block;background-color:{{ primary }};color:{{ btn_text }};font-family:{{ font }};font-size:16px;font-weight:bold;line-height:48px;text-align:center;text-decoration:none;padding:0 36px;border-radius:6px;-webkit-text-size-adjust:none;">{{ e.cta_text or 'Download Now' }}</a>
               <!--<![endif]-->
+            </td>
+          </tr></table>
+{% endmacro %}
+
+{% macro email_cta_signature() %}{% set e = email or {} %}{% set font = cta_font_family %}
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center"><tr>
+            <td align="center" bgcolor="#1969a0" style="background-color:#1969a0;padding:14px 30px;font-family:{{ font }};font-size:14px;font-weight:bold;">
+              <a href="{{ lp_url }}" target="_blank" style="display:inline-block;color:#ffffff;font-family:{{ font }};font-size:14px;line-height:18px;font-weight:bold;text-decoration:none;">{{ e.cta_text or 'Download Now' }}</a>
             </td>
           </tr></table>
 {% endmacro %}

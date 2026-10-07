@@ -322,7 +322,8 @@ def visual_editor(slug, page="landing"):
     cfg = gen.load_config(slug)
     font = (cfg.get("brand") or {}).get("font") or ""
     return render_template("editor.html", slug=slug, page=page, name=cfg.get("campaign_name", slug),
-                           google_font=font if font in gen.GOOGLE_FONTS else "")
+                           google_font=font if font in gen.GOOGLE_FONTS else "",
+                           google_fonts=sorted(gen.GOOGLE_FONTS))
 
 
 @app.get("/api/campaigns/<slug>/visual/<page>")
@@ -331,10 +332,12 @@ def get_visual(slug, page):
     cfg = gen.load_config(slug)
     design = gen.load_visual(slug, page)
     project = design.get("project") if design else None
+    if project and '"components"' not in json.dumps(project.get("pages") or []):
+        project = None  # an empty saved design would give a blank canvas: start from the layout again
     if project:
         seed = None
-    elif design:  # created from a ready-made design and not opened in the editor yet
-        seed = design.get("html", "")
+    elif design and (design.get("html") or "").strip():  # created from a ready-made design, not opened in the editor yet
+        seed = design["html"]
     else:
         seed = gen.visual_seed(slug, page, public_base())
     return jsonify(
@@ -360,6 +363,18 @@ def save_visual(slug, page):
     design.update({k: str(data.get(k) or "") for k in CUSTOM_CODE_KEYS})
     gen.save_visual(slug, page, design)
     cfg = gen.load_config(slug)
+    if page == "email":
+        email_cfg = cfg.setdefault("email", {})
+        if "email_cta_text" in data:
+            email_cfg["cta_text"] = str(data["email_cta_text"] or "").strip()[:120] or "Download Now"
+        if "email_cta_url" in data:
+            email_cfg["cta_url"] = str(data["email_cta_url"] or "").strip()[:2048]
+        cta_font = str(data.get("email_cta_font") or "")
+        if "email_cta_font" in data:
+            email_cfg["cta_font"] = cta_font if cta_font in gen.GOOGLE_FONTS else ""
+        background = str(data.get("email_body_background_color") or "")
+        if re.fullmatch(r"#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?", background):
+            email_cfg["body_background_color"] = background
     cfg.setdefault("visual", {})[page] = True
     cfg["updated_at"] = datetime.now(timezone.utc).isoformat()
     gen.save_config(slug, cfg)
@@ -374,6 +389,10 @@ def _editor_meta(slug):
         lp_url = f"{public_base()}/c/{slug}/landing-page/index.html"
     pdf = ctx["files"].get("pdf")
     return {"lp_url": lp_url, "primary": ctx["primary"], "btn_text": ctx["btn_text"],
+            "cta_text": (ctx.get("email") or {}).get("cta_text") or "Download Now",
+            "cta_url": ctx["lp_url"],
+            "cta_font": (ctx.get("email") or {}).get("cta_font") or "",
+            "body_background_color": (ctx.get("email") or {}).get("body_background_color") or "#f1f5f9",
             "pdf_url": f"/c/{slug}/landing-page/assets/{pdf}" if pdf else ""}
 
 

@@ -8,6 +8,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="x-apple-disable-message-reformatting">
   <title>{{ e.subject or campaign_name }}</title>
+  {% if e.cta_font and e.cta_font in google_fonts %}<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family={{ e.cta_font|replace(' ', '+') }}:wght@400;700&display=swap">{% endif %}
   <!--[if mso]><noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript><![endif]-->
   <style>
     body { margin:0; padding:0; width:100% !important; -webkit-text-size-adjust:100%; -ms-text-size-adjust:100%; }
@@ -27,11 +28,11 @@
 {{ visual_css }}
   </style>
 </head>
-<body style="margin:0;padding:0;background-color:#f1f5f9;">
+<body style="margin:0;padding:0;background-color:{{ e.body_background_color or '#f1f5f9' }};">
   {% if e.preheader %}
   <div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all;">{{ e.preheader }}&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;</div>
   {% endif %}
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f1f5f9;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:{{ e.body_background_color or '#f1f5f9' }};">
     <tr>
       <td align="center" style="padding:24px 10px;">
         <!--[if mso]><table role="presentation" width="600" align="center" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->

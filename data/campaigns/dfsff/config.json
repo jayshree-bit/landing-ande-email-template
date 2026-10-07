@@ -1,6 +1,6 @@
 {
-  "slug": "artificial-intelligence-and-generative-ai-in-banking",
-  "campaign_name": "Artificial intelligence and generative AI in banking",
+  "slug": "dfsff",
+  "campaign_name": "dfsff",
   "partner_name": "",
   "partner_label": "",
   "brand": {
@@ -166,14 +166,12 @@
     "preheader": "",
     "headline": "",
     "greeting": "",
-    "cta_text": "EXPLORE COMPLIMENTARY CONTENT",
-    "cta_url": "http://127.0.0.1:5050/c/artificial-intelligence-and-generative-ai-in-banking/landing-page/index.html",
+    "cta_text": "Download Now",
+    "cta_url": "",
     "signoff": "",
     "unsubscribe_url": "",
     "footer_note": "",
-    "body": "<p><strong>Explore the Signature Collection </strong>     <strong>Artificial intelligence and generative AI in banking</strong>     <strong>Hi {fname}, </strong></p><p><br></p><p> <strong>Are you equipped with the necessary insights to make well-informed decisions regarding artificial intelligence?</strong>     <em>American Banker</em> serves as the indispensable guide for top professionals in the financial services sector, offering an in-depth analysis of AI's role in transforming the industry \u2014 <strong> ranging from practical implementations to emerging risks</strong>. </p><p><br></p><p> Explore three exclusive Premium articles that are usually behind a paywall, now available through our Signature Collection, thanks to sponsorship by TCS. Gain valuable insights into the future of banking, claim your complimentary articles today.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</p>",
-    "body_background_color": "#ffffff",
-    "cta_font": ""
+    "body": ""
   },
   "company": {
     "name": "",
@@ -195,13 +193,8 @@
     "send_confirmation": false
   },
   "public_base_url": "",
-  "created_at": "2026-10-06T13:07:58.393546+00:00",
-  "files": {
-    "logo": "logo.png",
-    "partner_logo": "partner-logo.png"
-  },
-  "visual": {
-    "email": true
-  },
-  "updated_at": "2026-10-06T21:48:13.677895+00:00"
+  "created_at": "2026-10-06T20:36:42.783827+00:00",
+  "files": {},
+  "visual": {},
+  "updated_at": "2026-10-06T20:36:45.697488+00:00"
 }

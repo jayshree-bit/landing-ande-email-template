@@ -2,7 +2,7 @@ jya
 
 
 
-Download Now: http://192.168.1.144:5050/c/jya/landing-page/index.html
+Download Now: http://127.0.0.1:5050/c/jya/landing-page/index.html
 
 --
 
