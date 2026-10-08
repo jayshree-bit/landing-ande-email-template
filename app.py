@@ -423,6 +423,47 @@ def save_form(slug):
     return jsonify(ok=True, form=_form_settings(cfg), blocks=gen.block_previews(slug, public_base()))
 
 
+SETTINGS_SECTIONS = ("brand", "layout", "company", "email", "ty")
+SETTINGS_TOP_KEYS = ("campaign_name", "partner_name", "partner_label")
+
+
+@app.post("/api/campaigns/<slug>/settings")
+def save_settings(slug):
+    """Campaign settings edited from the visual editor (no need to go back to the builder).
+
+    Multipart: "settings" is a JSON object with any of brand/layout/company/email/ty (merged into the
+    existing values), top-level names, and "remove_files"; files are sent as logo/partner_logo/banner/pdf."""
+    _require(slug)
+    try:
+        data = json.loads(request.form.get("settings", "{}"))
+    except json.JSONDecodeError:
+        return jsonify(error="Invalid settings"), 400
+    cfg = gen.load_config(slug)
+    for section in SETTINGS_SECTIONS:
+        if isinstance(data.get(section), dict):
+            target = cfg.setdefault(section, {})
+            for k, v in data[section].items():
+                target[k] = v if isinstance(v, (bool, int, float)) else str(v or "")
+    for k in SETTINGS_TOP_KEYS:
+        if k in data:
+            cfg[k] = str(data[k] or "")
+    files = dict(cfg.get("files", {}))
+    try:
+        for role in FILE_ROLES:
+            upload = request.files.get(role)
+            if upload and upload.filename:
+                files[role] = _store_file(slug, role, upload.read(), upload.filename, upload.mimetype)
+            elif (data.get("remove_files") or {}).get(role):
+                files.pop(role, None)
+    except ValueError as e:
+        return jsonify(error=str(e)), 400
+    cfg["files"] = files
+    cfg["updated_at"] = datetime.now(timezone.utc).isoformat()
+    gen.save_config(slug, cfg)
+    gen.build(slug, public_base())
+    return jsonify(ok=True, files=files, blocks=gen.block_previews(slug, public_base()), meta=_editor_meta(slug))
+
+
 @app.post("/api/campaigns/<slug>/visual/<page>/mode")
 def visual_mode(slug, page):
     """Switch a page between the visual design and the standard template (the design is kept)."""

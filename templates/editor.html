@@ -278,6 +278,51 @@
   .tpl-body span { color:var(--muted); font-size:12px; min-height:32px; }
   .tpl-body button { margin-top:6px; font:inherit; background:var(--accent); color:#fff; border:0; border-radius:4px; padding:8px; cursor:pointer; font-weight:600; }
   .gjs-mdl-dialog.lp-wide { max-width:1100px; width:92vw; }
+  /* Shape divider card */
+  .shape-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:6px; margin:10px 0; }
+  .shape-grid button { background:#fff; border:1px solid var(--line); border-radius:4px; cursor:pointer; padding:6px 4px 4px; font:inherit; font-size:10.5px; color:var(--muted); display:flex; flex-direction:column; gap:3px; align-items:center; }
+  .shape-grid button svg { width:100%; height:22px; color:#94a3b8; }
+  .shape-grid button:hover { border-color:#c4c9d1; }
+  .shape-grid button.active { border-color:var(--head); color:var(--head); box-shadow:0 0 0 1px var(--head) inset; }
+  .shape-grid button.active svg { color:var(--accent); }
+  .shape-opts .chk { display:inline-flex; align-items:center; gap:6px; margin:6px 12px 0 0; font-size:12px; }
+  .live-card { margin:12px; padding:12px; border-radius:6px; background:#fff8e6; border:1px solid #f5d98b; display:none; font-size:12px; line-height:1.5; color:#6b4e00; }
+  .live-card b { color:#4a3500; }
+  .live-card button { margin-top:8px; width:100%; font:inherit; font-weight:600; background:#f59e0b; color:#fff; border:0; border-radius:4px; padding:8px; cursor:pointer; }
+
+  /* "+" on hovered sections and the structure picker */
+  #secPlus { position:fixed; z-index:5; width:30px; height:30px; border-radius:50%; border:2px solid #fff; background:#2563eb; color:#fff; font-size:20px; line-height:24px; text-align:center; cursor:pointer; box-shadow:0 3px 10px rgba(0,0,0,.25); display:none; padding:0; }
+  #secPlus:hover { transform:scale(1.12); background:#1d4ed8; }
+  .struct-tabs { display:flex; gap:6px; margin-bottom:14px; }
+  .struct-tabs button { font:inherit; border:1px solid var(--line); background:#fff; padding:7px 14px; border-radius:18px; cursor:pointer; font-weight:600; color:var(--txt); }
+  .struct-tabs button.active { background:var(--head); color:#fff; border-color:var(--head); }
+  .struct-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(120px, 1fr)); gap:10px; }
+  .struct-tile { border:1px solid var(--line); background:#fff; border-radius:4px; padding:10px; cursor:pointer; display:flex; flex-direction:column; gap:6px; align-items:stretch; font:inherit; font-size:11.5px; color:var(--muted); }
+  .struct-tile:hover { border-color:var(--accent); color:var(--accent); }
+  .struct-cols { display:flex; gap:4px; height:38px; }
+  .struct-cols span { background:#cbd5e1; border-radius:2px; }
+  .struct-tile:hover .struct-cols span { background:var(--accent); }
+  .sec-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:10px; }
+
+  /* Settings modal */
+  .set-tabs { display:flex; gap:6px; margin-bottom:14px; flex-wrap:wrap; }
+  .set-tabs button { font:inherit; border:1px solid var(--line); background:#fff; padding:7px 14px; border-radius:18px; cursor:pointer; font-weight:600; color:var(--txt); }
+  .set-tabs button.active { background:var(--head); color:#fff; border-color:var(--head); }
+  .set-pane { display:none; }
+  .set-pane.active { display:block; }
+  .set-files { display:grid; grid-template-columns:repeat(2, 1fr); gap:10px; }
+  .set-file { border:2px dashed #cbd5e1; border-radius:6px; padding:10px; display:flex; flex-direction:column; gap:6px; position:relative; }
+  .set-file.over { border-color:var(--accent); background:var(--accent-soft); }
+  .set-file b { color:var(--head); font-size:12.5px; }
+  .set-file .prev { height:56px; display:flex; align-items:center; background:repeating-conic-gradient(#e2e8f0 0% 25%, #fff 0% 50%) 50% / 12px 12px; border-radius:4px; padding:4px; }
+  .set-file .prev img { max-height:48px; max-width:100%; object-fit:contain; }
+  .set-file .prev:empty { display:none; }
+  .set-file .cur { font-size:11.5px; color:#16a34a; word-break:break-all; }
+  .set-file .rm { position:absolute; top:6px; right:6px; background:none; border:0; color:#dc2626; cursor:pointer; font-size:12px; }
+  .set-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .set-grid .full { grid-column:1 / -1; }
+  .set-color { display:flex; align-items:center; gap:8px; }
+  .lp-modal .set-color input[type=color] { width:44px; height:32px; padding:2px; }
 </style>
 </head>
 <body>
@@ -299,6 +344,7 @@
   <button class="tb" id="redo" title="Redo (Ctrl+Shift+Z)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 000 10h3"/></svg></button>
   <button class="tb on" id="outline" title="Show element outlines"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="3 2"><rect x="3" y="3" width="18" height="18" rx="1"/></svg></button>
   <button class="tb" id="preview" title="Preview inside the editor"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
+  <button class="tb" id="setBtn" title="Logos, banner, PDF, colours, company and email details"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/></svg>Settings</button>
   <button class="tb" id="tplBtn" title="Switch to a ready-made design"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="10" rx="1"/><rect x="13" y="3" width="8" height="6" rx="1"/><rect x="13" y="11" width="8" height="10" rx="1"/><rect x="3" y="15" width="8" height="6" rx="1"/></svg>Templates</button>
   <button class="tb" id="formBtn" title="Edit the lead form fields"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>Form</button>
   <button class="tb" id="structBtn" title="Structure: the page tree"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l10 5-10 5L2 7l10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg>Structure</button>
@@ -332,6 +378,7 @@
       <div class="side-hint">Drag a widget onto the page, or select an element and click its <b>+</b> button. <b>Dashed</b> widgets are live: they always show the logos, banner, form and footer from the campaign.</div>
     </div>
     <div class="pane" id="pane-layout">
+      <div class="live-card" id="liveCard"><span id="liveText"></span><button type="button" id="liveEdit"></button></div>
       <div class="cta-edit" id="cardCard" style="display:none">
         <label>Rounded card &amp; spacing</label>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 10px;margin-top:8px">
@@ -437,8 +484,97 @@
       </div>
       </div>
     </div>
+    <div id="horizontalMenuCard" class="settings-card" style="display:none;">
+
+  <h3>Horizontal Menu</h3>
+
+  <div class="setting-section">
+    <label>Menu Items</label>
+
+    <div id="horizontalMenuItems"></div>
+
+    <button
+      type="button"
+      id="addHorizontalMenuItem"
+      class="secondary"
+      style="margin-top:10px;width:100%;"
+    >
+      + Add Menu Item
+    </button>
+  </div>
+
+  <hr>
+
+  <div class="setting-row">
+    <label for="horizontalMenuAlign">Alignment</label>
+
+    <select id="horizontalMenuAlign">
+      <option value="flex-start">Left</option>
+      <option value="center" selected>Center</option>
+      <option value="flex-end">Right</option>
+      <option value="space-between">Space Between</option>
+    </select>
+  </div>
+
+  <div class="setting-row">
+    <label for="horizontalMenuColor">Text Color</label>
+    <input
+      type="color"
+      id="horizontalMenuColor"
+      value="#0f172a"
+    >
+  </div>
+
+  <div class="setting-row">
+    <label for="horizontalMenuFontSize">Font Size</label>
+    <input
+      type="number"
+      id="horizontalMenuFontSize"
+      min="8"
+      max="60"
+      value="15"
+    >
+  </div>
+
+  <div class="setting-row">
+    <label for="horizontalMenuGap">Gap</label>
+    <input
+      type="number"
+      id="horizontalMenuGap"
+      min="0"
+      max="100"
+      value="28"
+    >
+  </div>
+
+  <div class="setting-row">
+    <label for="horizontalMenuPadding">Padding</label>
+    <input
+      type="number"
+      id="horizontalMenuPadding"
+      min="0"
+      max="100"
+      value="14"
+    >
+  </div>
+
+</div>
     <div class="pane" id="pane-style">
       <div class="pane-empty" id="style-empty">Select an element on the page to style it.</div>
+      <div id="shapeCard" style="display:none">
+        <button type="button" class="ctl-head" data-sec="shape">Shape divider</button>
+        <div class="ctl-body">
+          <div class="sp-seg" style="grid-template-columns:1fr 1fr" id="shapePos"><button type="button" data-pos="top" class="active">Top</button><button type="button" data-pos="bottom">Bottom</button></div>
+          <div class="shape-grid" id="shapeGrid"></div>
+          <div id="shapeOpts" class="shape-opts">
+            <div class="ctl-row"><label>Colour</label><span class="set-color"><input type="color" id="shapeColor" value="#ffffff"></span></div>
+            <div class="ctl-slider"><div class="top"><span>Height (px)</span><span></span></div><div class="bottom"><input type="range" id="shapeH" min="10" max="300" step="2"><input type="number" id="shapeHn" min="10" max="600"></div></div>
+            <div class="ctl-slider"><div class="top"><span>Width (%)</span><span></span></div><div class="bottom"><input type="range" id="shapeW" min="100" max="300" step="5"><input type="number" id="shapeWn" min="100" max="400"></div></div>
+            <label class="chk"><input type="checkbox" id="shapeFlip"> Flip</label>
+            <label class="chk"><input type="checkbox" id="shapeFront"> Bring to front</label>
+          </div>
+        </div>
+      </div>
       <div class="quick-format" id="textAlignCard" style="display:none">
         <label>Text alignment</label>
         <p class="hint">Applies to the selected text block.</p>
@@ -504,6 +640,7 @@
     <div id="spOverlay"></div>
     <div id="spLabel"></div>
     <div id="spShield"></div>
+    <button id="secPlus" title="Add a section here">+</button>
     <button id="addSection" title="Add a new section at the end of the page"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"/></svg>Add section</button>
   </div>
 </div>
@@ -581,7 +718,8 @@ function webBlocks(add) {
   add('box', 'Box', 'Layout', '<div class="lp-box"><h3>Box title</h3><p>Box text goes here.</p></div>');
   add('spacer', 'Spacer', 'Layout', '<div class="lp-spacer"></div>');
   add('divider', 'Divider', 'Layout', '<hr class="lp-divider">');
-
+  
+  // ---------------- Horizontal Menu ---------------
   add('heading', 'Heading', 'Basic', '<h2>Your heading</h2>');
   add('text', 'Text', 'Basic', '<p>Write your text here. Double-click to edit, and use the Style tab for font, size and colour.</p>');
   add('button', 'Button', 'Basic', '<a class="lp-btn" href="#form">Download Now</a>');
@@ -591,6 +729,7 @@ function webBlocks(add) {
   add('check', 'Check list', 'Basic', '<ul style="list-style:none;padding:0;"><li style="margin-bottom:8px;">✓ Benefit one</li><li style="margin-bottom:8px;">✓ Benefit two</li><li style="margin-bottom:8px;">✓ Benefit three</li></ul>');
   add('quote', 'Quote', 'Basic', '<blockquote style="margin:0 0 16px;padding:10px 20px;border-left-width:4px;border-left-style:solid;border-left-color:var(--primary);font-style:italic;font-size:18px;">“A short customer quote or key message.”</blockquote>');
   add('link', 'Link', 'Basic', '<a href="https://">Link text</a>');
+  add('form', 'Form', 'Basic', '<div data-lp-block="form"></div>', { icon: 'form', attributes: { class: 'gjs-block live' } });
 
   const src = imgSrc('banner');
   add('hero', 'Hero banner', 'Sections',
@@ -604,7 +743,36 @@ function webBlocks(add) {
   add('contentform', 'Content + form', 'Sections', section(
     `<div class="main-grid" style="padding:0;"><div class="content"><h2>Why download?</h2><p>Explain what the reader gets.</p></div><div data-lp-block="form"></div></div>`, '48px'));
 
-  return ['header', 'banner', 'banner-slim', 'form', 'download', 'footer'];
+  SECTION_TEMPLATES.forEach(t => add('sec-' + t.id, t.label, 'Ready-made sections', t.html(), { icon: t.icon }));
+   add(
+    'horizontal-menu',
+    'Horizontal Menu',
+    'Navigation',
+    `
+      <nav
+        class="lp-horizontal-menu"
+        data-menu-items='[{"name":"Home","url":"#"},{"name":"About","url":"#"},{"name":"Services","url":"#"},{"name":"Contact","url":"#"}]'
+        style="
+          width:100%;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          gap:28px;
+          padding:14px 20px;
+          box-sizing:border-box;
+          color:#0f172a;
+          font-size:15px;
+        "
+      >
+        <a href="#" style="color:inherit;font-size:inherit;font-weight:500;text-decoration:none;white-space:nowrap;display:inline-block;">Home</a>
+        <a href="#" style="color:inherit;font-size:inherit;font-weight:500;text-decoration:none;white-space:nowrap;display:inline-block;">About</a>
+        <a href="#" style="color:inherit;font-size:inherit;font-weight:500;text-decoration:none;white-space:nowrap;display:inline-block;">Services</a>
+        <a href="#" style="color:inherit;font-size:inherit;font-weight:500;text-decoration:none;white-space:nowrap;display:inline-block;">Contact</a>
+      </nav>
+    `
+  );
+
+  return ['header', 'banner', 'banner-slim', 'download', 'footer'];
 }
 
 /* ---------------- Widgets: email (tables + inline styles) ---------------- */
@@ -653,7 +821,7 @@ const CLASS_NAMES = [
   ['lp-hero', 'Hero banner'], ['lp-section', 'Section'], ['lp-row', 'Columns'], ['lp-col', 'Column'], ['lp-box', 'Box'],
   ['main-grid', 'Content + form'], ['container', 'Content area'], ['content', 'Text area'], ['rich', 'Text block'],
   ['lp-btn', 'Button'], ['lp-spacer', 'Spacer'], ['lp-divider', 'Divider'], ['email-container', 'Email body'],
-  ['ty-card', 'Thank-you card'], ['ty-icon', 'Tick icon'], ['eyebrow', 'Small label'], ['subheadline', 'Sub-headline'], ['stack', 'Column'],
+  ['ty-card', 'Thank-you card'], ['ty-icon', 'Tick icon'], ['eyebrow', 'Small label'], ['subheadline', 'Sub-headline'], ['stack', 'Column'],['lp-horizontal-menu', 'Horizontal Menu'],
 ];
 const TAG_NAMES = { h1: 'Heading', h2: 'Heading', h3: 'Heading', h4: 'Heading', p: 'Paragraph', ul: 'List', ol: 'List', li: 'List item',
   img: 'Image', a: 'Link', blockquote: 'Quote', table: 'Row', td: 'Cell', tr: 'Table row', hr: 'Divider', svg: 'Icon', span: 'Text' };
@@ -945,6 +1113,328 @@ function renderRichText() {
   richQuill.setContents(richQuill.clipboard.convert(target.getInnerHTML()), 'silent');
   richBusy = false;
 }
+function getHorizontalMenu(comp) {
+  if (!comp) return null;
+
+  const hasHorizontalMenuClass = c =>
+    !!(c && c.getClasses && c.getClasses().includes('lp-horizontal-menu'));
+
+  if (hasHorizontalMenuClass(comp)) return comp;
+
+  for (
+    let parent = comp.parent();
+    parent && parent.get('type') !== 'wrapper';
+    parent = parent.parent()
+  ) {
+    if (hasHorizontalMenuClass(parent)) return parent;
+  }
+
+  return null;
+}
+
+function horizontalMenuItems(menu) {
+  if (!menu) return [];
+
+  const attrs = menu.getAttributes ? menu.getAttributes() : {};
+  const raw = attrs['data-menu-items'];
+
+  if (!raw) return [];
+
+  try {
+    const items = JSON.parse(raw);
+    return Array.isArray(items) ? items : [];
+  } catch (e) {
+    console.warn('Invalid horizontal menu data:', e);
+    return [];
+  }
+}
+
+function saveHorizontalMenuItems(menu, items) {
+  if (!menu) return;
+
+  const safeItems = (Array.isArray(items) ? items : []).map(item => ({
+    name: String(item.name || ''),
+    url: String(item.url || '#')
+  }));
+
+  menu.addAttributes({
+    'data-menu-items': JSON.stringify(safeItems)
+  });
+
+  const html = safeItems.map(item => `
+    <a
+      href="${esc(item.url || '#')}"
+      style="
+        color:inherit;
+        font-size:inherit;
+        font-weight:inherit;
+        text-decoration:none;
+        white-space:nowrap;
+        display:inline-block;
+      "
+    >${esc(item.name || 'Menu')}</a>
+  `).join('');
+
+  menu.components(html);
+  markDirty();
+}
+
+function renderHorizontalMenu() {
+  const card = $('#horizontalMenuCard');
+  if (!card) return;
+
+  const selected = editor && editor.getSelected
+    ? editor.getSelected()
+    : null;
+
+  const menu = getHorizontalMenu(selected);
+
+  card.style.display = menu ? 'block' : 'none';
+
+  if (!menu) return;
+
+  const itemsContainer = $('#horizontalMenuItems');
+  if (!itemsContainer) return;
+
+  const items = horizontalMenuItems(menu);
+  itemsContainer.innerHTML = '';
+
+  if (!items.length) {
+    const empty = document.createElement('div');
+    empty.style.cssText = `
+      padding:12px;
+      border:1px dashed #cbd5e1;
+      border-radius:8px;
+      color:#64748b;
+      font-size:13px;
+      text-align:center;
+      margin-top:8px;
+    `;
+    empty.textContent = 'No menu items. Click + Add Menu Item.';
+    itemsContainer.appendChild(empty);
+  }
+
+  items.forEach((item, index) => {
+    const row = document.createElement('div');
+
+    row.className = 'horizontal-menu-item';
+    row.style.cssText = `
+      border:1px solid #e2e8f0;
+      border-radius:8px;
+      padding:12px;
+      margin-top:10px;
+      background:#ffffff;
+      box-sizing:border-box;
+    `;
+
+    row.innerHTML = `
+      <div style="font-size:13px;font-weight:600;margin-bottom:12px;color:#334155;">
+        Menu Item ${index + 1}
+      </div>
+
+      <label style="display:block;font-size:12px;font-weight:600;margin-bottom:5px;color:#475569;">
+        Menu Name
+      </label>
+
+      <input
+        type="text"
+        class="menu-name"
+        placeholder="Enter menu name"
+        value="${esc(item.name || '')}"
+        style="width:100%;box-sizing:border-box;"
+      >
+
+      <label style="display:block;font-size:12px;font-weight:600;margin:12px 0 5px;color:#475569;">
+        Menu Link
+      </label>
+
+      <input
+        type="url"
+        class="menu-url"
+        placeholder="https://example.com"
+        value="${esc(item.url || '')}"
+        style="width:100%;box-sizing:border-box;"
+      >
+
+      <button
+        type="button"
+        class="menu-remove"
+        style="
+          margin-top:10px;
+          width:100%;
+          padding:7px 10px;
+          border:1px solid #dc2626;
+          border-radius:6px;
+          background:#fff;
+          color:#dc2626;
+          cursor:pointer;
+          font-size:12px;
+        "
+      >
+        Remove Menu Item
+      </button>
+    `;
+
+    row.querySelector('.menu-name').addEventListener('input', e => {
+      updateHorizontalMenuItem(index, 'name', e.target.value);
+    });
+
+    row.querySelector('.menu-url').addEventListener('input', e => {
+      updateHorizontalMenuItem(index, 'url', e.target.value);
+    });
+
+    row.querySelector('.menu-remove').addEventListener('click', () => {
+      removeHorizontalMenuItem(index);
+    });
+
+    itemsContainer.appendChild(row);
+  });
+
+  const style = menu.getStyle ? menu.getStyle() : {};
+
+  const align = $('#horizontalMenuAlign');
+  if (align) {
+    align.value = style['justify-content'] || 'center';
+  }
+
+  const color = $('#horizontalMenuColor');
+  if (color) {
+    color.value = toHex(style.color || '#0f172a');
+  }
+
+  const fontSize = $('#horizontalMenuFontSize');
+  if (fontSize) {
+    fontSize.value = parseInt(style['font-size'], 10) || 15;
+  }
+
+  const gap = $('#horizontalMenuGap');
+  if (gap) {
+    gap.value = parseInt(style.gap, 10) || 28;
+  }
+
+  const padding = $('#horizontalMenuPadding');
+  if (padding) {
+    padding.value = parseInt(style.padding, 10) || 14;
+  }
+}
+
+function addHorizontalMenuItem() {
+  const selected = editor && editor.getSelected
+    ? editor.getSelected()
+    : null;
+
+  const menu = getHorizontalMenu(selected);
+  if (!menu) return;
+
+  const items = horizontalMenuItems(menu);
+
+  items.push({
+    name: 'New Item',
+    url: '#'
+  });
+
+  saveHorizontalMenuItems(menu, items);
+  editor.select(menu);
+  renderHorizontalMenu();
+}
+
+function updateHorizontalMenuItem(index, key, value) {
+  const selected = editor && editor.getSelected
+    ? editor.getSelected()
+    : null;
+
+  const menu = getHorizontalMenu(selected);
+  if (!menu) return;
+
+  if (key !== 'name' && key !== 'url') return;
+
+  const items = horizontalMenuItems(menu);
+  if (!items[index]) return;
+
+  items[index][key] = value;
+  saveHorizontalMenuItems(menu, items);
+}
+
+function removeHorizontalMenuItem(index) {
+  const selected = editor && editor.getSelected
+    ? editor.getSelected()
+    : null;
+
+  const menu = getHorizontalMenu(selected);
+  if (!menu) return;
+
+  const items = horizontalMenuItems(menu);
+  if (index < 0 || index >= items.length) return;
+
+  items.splice(index, 1);
+
+  saveHorizontalMenuItems(menu, items);
+  editor.select(menu);
+  renderHorizontalMenu();
+}
+
+function updateHorizontalMenuStyle(property, value) {
+  const selected = editor && editor.getSelected
+    ? editor.getSelected()
+    : null;
+
+  const menu = getHorizontalMenu(selected);
+  if (!menu) return;
+
+  menu.setStyle({ [property]: value });
+  markDirty();
+}
+
+function initHorizontalMenuControls() {
+  const addButton = $('#addHorizontalMenuItem');
+  if (addButton && !addButton.dataset.bound) {
+    addButton.dataset.bound = '1';
+    addButton.addEventListener('click', addHorizontalMenuItem);
+  }
+
+  const align = $('#horizontalMenuAlign');
+  if (align && !align.dataset.bound) {
+    align.dataset.bound = '1';
+    align.addEventListener('change', e => {
+      updateHorizontalMenuStyle('justify-content', e.target.value);
+    });
+  }
+
+  const color = $('#horizontalMenuColor');
+  if (color && !color.dataset.bound) {
+    color.dataset.bound = '1';
+    color.addEventListener('input', e => {
+      updateHorizontalMenuStyle('color', e.target.value);
+    });
+  }
+
+  const fontSize = $('#horizontalMenuFontSize');
+  if (fontSize && !fontSize.dataset.bound) {
+    fontSize.dataset.bound = '1';
+    fontSize.addEventListener('input', e => {
+      const value = Math.max(8, Math.min(60, parseInt(e.target.value, 10) || 15));
+      updateHorizontalMenuStyle('font-size', `${value}px`);
+    });
+  }
+
+  const gap = $('#horizontalMenuGap');
+  if (gap && !gap.dataset.bound) {
+    gap.dataset.bound = '1';
+    gap.addEventListener('input', e => {
+      const value = Math.max(0, Math.min(100, parseInt(e.target.value, 10) || 0));
+      updateHorizontalMenuStyle('gap', `${value}px`);
+    });
+  }
+
+  const padding = $('#horizontalMenuPadding');
+  if (padding && !padding.dataset.bound) {
+    padding.dataset.bound = '1';
+    padding.addEventListener('input', e => {
+      const value = Math.max(0, Math.min(100, parseInt(e.target.value, 10) || 0));
+      updateHorizontalMenuStyle('padding', `${value}px 20px`);
+    });
+  }
+}
 
 function renderCtaText() {
   const sel = editor && editor.getSelected();
@@ -1159,8 +1649,9 @@ const HOVERS = [['', 'None'], ['lp-hover-grow', 'Grow'], ['lp-hover-shrink', 'Sh
   ['lp-hover-glow', 'Glow'], ['lp-hover-brighten', 'Brighten'], ['lp-hover-dim', 'Fade']];
 
 function linkKeys(c) {
-  return (c.get('tagName') || '').toLowerCase() === 'a' ? ['href', 'target'] : ['data-lp-link', 'data-lp-target'];
-}
+ return (c.get('tagName') || '').toLowerCase() === 'a'
+    ? ['href', 'target']
+    : ['data-lp-link', 'data-lp-target'];}
 function setAttr(c, name, value) {
   if (value) c.addAttributes({ [name]: value });
   else c.removeAttributes(name);
@@ -1276,6 +1767,7 @@ async function openTemplates() {
     editor.UndoManager.clear(); // undo can't bring back the old design's stylesheet; "Restore previous design" does
     applyCustomCss();
     nameTree(editor.getWrapper());
+    applyDropRules(editor.getWrapper());
     editor.select(null);
     editor.Modal.close();
     if (dlg) dlg.classList.remove('lp-wide');
@@ -1296,7 +1788,7 @@ function showRestore() {
     BASE_CSS = previousDesign.base;
     TEMPLATE_ID = previousDesign.template;
     previousDesign = null;
-    setTimeout(() => { applyCustomCss(); nameTree(editor.getWrapper()); }, 50);
+    setTimeout(() => { applyCustomCss(); nameTree(editor.getWrapper()); applyDropRules(editor.getWrapper()); }, 50);
     showNotice();
     markDirty();
   };
@@ -1331,6 +1823,34 @@ function openHelp() {
   try { localStorage.setItem('lp-editor-help-seen', '1'); } catch (e) {}
 }
 
+// A live block with nothing visible (e.g. a header before any logo is uploaded) shows the "double-click to add" hint.
+function isEmptyBlock(html) {
+  if (!html) return true;
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html.replace(/<script[\s\S]*?<\/script>/gi, '');
+  return !tmp.textContent.trim() && !tmp.querySelector('img, svg, input, select, textarea, button, a[href]');
+}
+
+/* ---------------- Drop rules ---------------- */
+const GRID_CLASSES = ['main-grid', 'lp-row'];
+const COLUMN_CLASSES = ['lp-col', 'content'];
+const isSectionEl = el => el.tagName === 'SECTION' || (el.classList && (el.classList.contains('lp-section') || el.classList.contains('lp-hero')));
+const isGrid = c => !!c && c.getClasses && c.getClasses().some(k => GRID_CLASSES.includes(k));
+const isColumnLike = c => !!c && (c.get('type') === 'lp-block' || c.getClasses().some(k => COLUMN_CLASSES.includes(k)));
+function sectionDraggable(src, target) {
+  for (let x = target; x; x = x.parent()) if (isSection(x) || x.get('type') === 'lp-block') return false;
+  return true;
+}
+function gridDroppable(src) { return isColumnLike(src); }
+// Saved designs load from JSON, where the types above are not re-detected: give those components the same rules.
+function applyDropRules(c) {
+  if (!IS_EMAIL && c.get('type') === 'default') {
+    if (isSection(c)) c.set('draggable', sectionDraggable, { silent: true });
+    else if (isGrid(c)) c.set('droppable', gridDroppable, { silent: true });
+  }
+  c.components().forEach(applyDropRules);
+}
+
 /* ---------------- Live campaign blocks, visibility, sticky form ---------------- */
 function lpPlugin(ed) {
   ed.DomComponents.addType('lp-block', {
@@ -1352,14 +1872,36 @@ function lpPlugin(ed) {
           const c = ctaSettings(this.model);
           html = applyCtaToHtml(html, c.text, c.url, c.font);
         }
+        if (isEmptyBlock(html)) html = '';
         this.el.innerHTML = html
           ? `<div style="pointer-events:none">${html}</div>`
-          : `<div style="pointer-events:none;padding:14px;border:1px dashed #94a3b8;color:#64748b;text-align:center;font:13px sans-serif">${LIVE_LABELS[key] || key}: nothing to show yet (set it up in the campaign builder)</div>`;
+          : `<div style="pointer-events:none;padding:16px;border:2px dashed #f5b942;background:#fffbeb;color:#92400e;text-align:center;font:13px sans-serif;border-radius:6px">${LIVE_LABELS[key] || key} is empty. <b>Double-click here</b> to add it.</div>`;
+        this.el.ondblclick = e => { e.stopPropagation(); editLiveBlock(key); };
       },
     },
   });
 
+  // Drop rules (like Elementor): sections only go between other sections, and a column grid only takes columns,
+  // so a dropped section can never land inside "Content + form" and push the form onto a new row.
+  if (!IS_EMAIL) {
+    ed.DomComponents.addType('lp-section', {
+      isComponent: el => el.nodeType === 1 && isSectionEl(el),
+      model: { defaults: { draggable: sectionDraggable } },
+    });
+    ed.DomComponents.addType('lp-grid', {
+      isComponent: el => el.nodeType === 1 && el.classList && GRID_CLASSES.some(k => el.classList.contains(k)),
+      model: { defaults: { droppable: gridDroppable } },
+    });
+  }
+
   // Checkbox trait that toggles a CSS class (used for hide-on-device and the sticky form switch).
+  // Shape dividers: drawn inside a section, never selected on their own (managed from the Style tab).
+  ed.DomComponents.addType('lp-shape', {
+    isComponent: el => el.nodeType === 1 && el.classList && el.classList.contains('lp-shape'),
+    model: { defaults: { selectable: false, hoverable: false, highlightable: false, layerable: false, draggable: false,
+      droppable: false, copyable: false, badgable: false, propagate: ['selectable', 'hoverable', 'highlightable', 'layerable', 'draggable', 'droppable', 'badgable'] } },
+  });
+
   ed.TraitManager.addType('lp-class-toggle', {
     createInput() {
       const el = document.createElement('input');
@@ -1522,6 +2064,7 @@ function drawOverlay() {
 }
 function overlayLoop() {
   try { drawOverlay(); } catch (e) {}
+  try { drawSectionPlus(); } catch (e) {}
   requestAnimationFrame(overlayLoop);
 }
 
@@ -1773,11 +2316,17 @@ function isContainer(c) {
 }
 
 function insertBlock(block, target) {
+  const content = block.get('content');
+  // A whole section always goes between sections (below the one holding the selection), never inside a column.
+  if (!IS_EMAIL && typeof content === 'string' && /^\s*<section[\s>]/i.test(content)) {
+    insertSectionHtml(content, target ? topSection(target) : null);
+    return;
+  }
   let parent, at;
   if (!target) { parent = rootContainer(); at = parent.components().length; }
   else if (isContainer(target)) { parent = target; at = target.components().length; }
   else { parent = target.parent(); at = parent.components().indexOf(target) + 1; }
-  const added = parent.append(block.get('content'), { at });
+  const added = parent.append(content, { at });
   const first = Array.isArray(added) ? added[0] : added;
   if (first) {
     editor.select(first);
@@ -1895,6 +2444,294 @@ function openFormEditor() {
   editor.Modal.open({ title: 'Lead form', content: wrap });
 }
 
+/* ---------------- Ready-made sections & structure picker ---------------- */
+const SECTION_TEMPLATES = [
+  { id: 'hero', label: 'Hero', icon: 'hero', html: () => `<section class="lp-section" style="padding:96px 0;background-color:#0f172a;text-align:center;"><div class="container" style="max-width:820px;"><p class="eyebrow" style="color:#93c5fd;">Free guide</p><h1 style="color:#ffffff;font-size:44px;line-height:1.15;margin:0 0 16px;">Your big headline goes here</h1><p style="color:#cbd5e1;font-size:19px;margin:0 0 26px;">One or two lines that explain the value of your offer.</p><a class="lp-btn" href="#form">Get it now</a></div></section>` },
+  { id: 'features', label: 'Features', icon: 'card', html: () => section(`<h2 style="text-align:center;margin:0 0 30px;">Why choose us</h2><div class="lp-row">${['Fast set-up', 'Secure by design', 'Expert support'].map((t, i) => `<div class="lp-col"><div class="lp-box" style="text-align:center;height:100%;"><p style="font-size:30px;margin:0 0 8px;">${['⚡', '🔒', '💬'][i]}</p><h3 style="margin:0 0 8px;">${t}</h3><p>Describe this benefit in one short sentence.</p></div></div>`).join('')}</div>`) },
+  { id: 'content-form', label: 'Content + form', icon: 'form', html: () => section(`<div class="main-grid" style="padding:0;"><div class="content"><h2>Why download?</h2><p>Explain what the reader gets.</p><ul><li>First benefit</li><li>Second benefit</li><li>Third benefit</li></ul></div><div data-lp-block="form"></div></div>`, '56px') },
+  { id: 'cta', label: 'Call to action', icon: 'button', html: () => `<section class="lp-section" style="padding:48px 0;background-color:var(--primary);"><div class="container" style="display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;"><h2 style="color:#ffffff;margin:0;">Ready to get started?</h2><a class="lp-btn" href="#form" style="background-color:#ffffff;color:#0f172a;">Download now</a></div></section>` },
+  { id: 'testimonial', label: 'Testimonial', icon: 'quote', html: () => section(`<div style="max-width:760px;margin:0 auto;text-align:center;"><p style="font-size:22px;line-height:1.5;font-style:italic;margin:0 0 18px;">“This guide gave our team a clear plan. We saw results within weeks.”</p><p style="font-weight:700;margin:0;">Jane Doe</p><p style="color:#64748b;margin:0;">Head of IT, Example Ltd</p></div>`, '64px') },
+  { id: 'stats', label: 'Numbers', icon: 'col4', html: () => section(`<div class="lp-row" style="text-align:center;">${[['10k+', 'Readers'], ['95%', 'Would recommend'], ['24/7', 'Support'], ['50+', 'Countries']].map(([n, l]) => `<div class="lp-col"><p style="font-size:40px;font-weight:800;color:var(--primary);margin:0;">${n}</p><p style="margin:4px 0 0;color:#64748b;">${l}</p></div>`).join('')}</div>`, '48px') },
+  { id: 'faq', label: 'FAQ', icon: 'list', html: () => section(`<div style="max-width:820px;margin:0 auto;"><h2 style="text-align:center;margin:0 0 24px;">Frequently asked questions</h2>${['Who is this guide for?', 'Is it really free?', 'How long does it take to read?'].map(q => `<div style="border-bottom:1px solid #e2e8f0;padding:16px 0;"><h4 style="margin:0 0 6px;font-size:17px;">${q}</h4><p style="margin:0;color:#475569;">Write a short, helpful answer here.</p></div>`).join('')}</div>`) },
+  { id: 'image-text', label: 'Image + text', icon: 'imgtext', html: () => row(col(45, `<img src="${imgSrc('banner')}" style="width:100%;border-radius:10px;">`) + col(55, '<h2>Feature title</h2><p>Explain the feature or benefit in a sentence or two.</p><a class="lp-btn" href="#form">Learn more</a>')) },
+];
+const STRUCTURES = [[100], [50, 50], [33, 33, 33], [25, 25, 25, 25], [30, 70], [70, 30], [66, 33], [33, 66], [25, 50, 25], [20, 20, 20, 20, 20]];
+
+function topSection(c) {
+  const root = rootContainer();
+  for (let x = c; x && x !== root && x.get('type') !== 'wrapper'; x = x.parent()) {
+    if (x.parent() === root || (x.parent() && x.parent().get('type') === 'wrapper')) return x;
+  }
+  return null;
+}
+let hoverSection = null;
+function drawSectionPlus() {
+  const btn = $('#secPlus');
+  const frame = editor && editor.Canvas.getFrameEl();
+  const el = hoverSection && hoverSection.getEl && hoverSection.getEl();
+  if (!el || !frame || !el.isConnected || spDrag || editor.Commands.isActive('core:preview')) { btn.style.display = 'none'; return; }
+  const fr = frame.getBoundingClientRect(), r = el.getBoundingClientRect();
+  const y = fr.top + r.bottom, x = fr.left + r.left + r.width / 2;
+  if (y < fr.top + 10 || y > fr.bottom - 10) { btn.style.display = 'none'; return; }
+  Object.assign(btn.style, { display: 'block', left: x - 15 + 'px', top: y - 15 + 'px' });
+}
+
+function insertSectionHtml(html, after) {
+  const root = rootContainer();
+  // With no target, add at the end of the page, but above the footer.
+  const last = root.components().at(root.components().length - 1);
+  const footerLast = last && ['footer', 'email-footer'].includes(last.getAttributes()['data-lp-block']);
+  const at = after && after.parent() ? after.parent().components().indexOf(after) + 1 : root.components().length - (footerLast ? 1 : 0);
+  const parent = after && after.parent() ? after.parent() : root;
+  const added = parent.append(html, { at });
+  const first = Array.isArray(added) ? added[0] : added;
+  if (first) { editor.select(first); editor.Canvas.scrollTo(first, { behavior: 'smooth', block: 'center' }); }
+  editor.Modal.close();
+}
+
+function openStructure(after) {
+  if (IS_EMAIL) { editor.select(null); openAdd(null); return; } // email rows come from the Email layout widgets
+  const wrap = document.createElement('div');
+  wrap.className = 'lp-modal';
+  wrap.innerHTML = `<div class="struct-tabs"><button type="button" class="active" data-t="s">Select your structure</button><button type="button" data-t="r">Ready-made sections</button></div>
+    <div data-p="s"><div class="struct-grid">${STRUCTURES.map((cols, i) => `<button type="button" class="struct-tile" data-i="${i}"><div class="struct-cols">${cols.map(w => `<span style="flex:${w}"></span>`).join('')}</div>${cols.length === 1 ? 'One column' : cols.join(' / ')}</button>`).join('')}</div></div>
+    <div data-p="r" style="display:none"><div class="sec-grid">${SECTION_TEMPLATES.map(t => `<button type="button" class="add-tile" data-sec="${t.id}">${I[t.icon] || I.section}<span>${esc(t.label)}</span></button>`).join('')}</div></div>
+    <p class="muted" style="margin-top:14px">${after ? 'The new section is added below the one you hovered.' : 'The new section is added at the end of the page.'}</p>`;
+  wrap.querySelectorAll('.struct-tabs button').forEach(b => b.onclick = () => {
+    wrap.querySelectorAll('.struct-tabs button').forEach(x => x.classList.toggle('active', x === b));
+    wrap.querySelectorAll('[data-p]').forEach(p => { p.style.display = p.dataset.p === b.dataset.t ? '' : 'none'; });
+  });
+  wrap.querySelectorAll('.struct-tile').forEach(b => b.onclick = () => {
+    const cols = STRUCTURES[+b.dataset.i];
+    const equal = cols.every(w => w === cols[0]);
+    insertSectionHtml(row(cols.map(w => col(equal ? 0 : w)).join('')), after);
+  });
+  wrap.querySelectorAll('[data-sec]').forEach(b => b.onclick = () => insertSectionHtml(SECTION_TEMPLATES.find(t => t.id === b.dataset.sec).html(), after));
+  editor.Modal.open({ title: 'Add a section', content: wrap });
+}
+
+/* ---------------- Shape dividers ---------------- */
+function zigzag() {
+  let d = 'M0,0 ';
+  for (let i = 0; i <= 30; i++) d += `L${i * 40},${i % 2 ? 60 : 20} `;
+  return `<path d="${d}L1200,0 Z"/>`;
+}
+const SHAPES = {
+  wave: { label: 'Wave', svg: '<path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z"/>' },
+  waves: { label: 'Layered waves', svg: '<path opacity=".25" d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z"/><path opacity=".5" d="M0,0V15.81C13,36.92,27.64,56.86,47.69,72.05,99.41,111.27,165,111,224.58,91.58c31.15-10.15,60.09-26.07,89.67-39.8,40.92-19,84.73-46,130.83-49.67,36.26-2.85,70.9,9.42,98.6,31.56,31.77,25.39,62.32,62,103.63,73,40.44,10.79,81.35-6.69,119.13-24.28s75.16-39,116.92-43.05c59.73-5.85,113.28,22.88,168.9,38.84,30.2,8.66,59,6.17,87.09-7.5,22.43-10.89,48-26.93,60.65-49.24V0Z"/><path d="M0,0V5.63C149.93,59,314.09,71.32,475.83,42.57c43-7.64,84.23-20.12,127.61-26.46,59-8.63,112.48,12.24,165.56,35.4C827.93,77.22,886,95.24,951.2,90c86.53-7,172.46-45.71,248.8-84.81V0Z"/>' },
+  curve: { label: 'Curve', svg: '<path d="M0,0V7.23C0,65.52,268.63,112.77,600,112.77S1200,65.52,1200,7.23V0Z"/>' },
+  'curve-asym': { label: 'Soft curve', svg: '<path d="M0,0V6c0,21.6,291,111.46,741,110.26,445.39,3.6,459-88.3,459-110.26V0Z"/>' },
+  tilt: { label: 'Tilt', svg: '<path d="M1200 120L0 16.48 0 0 1200 0 1200 120z"/>' },
+  triangle: { label: 'Triangle', svg: '<path d="M1200 0L0 0 598.97 114.72 1200 0z"/>' },
+  arrow: { label: 'Arrow', svg: '<path d="M0,0 H1200 V20 H650 L600,80 L550,20 H0 Z"/>' },
+  zigzag: { label: 'Zigzag', svg: zigzag() },
+  mountains: { label: 'Mountains', svg: '<path opacity=".45" d="M0,0 V70 L170,110 L330,50 L520,115 L700,55 L880,118 L1040,60 L1200,100 V0 Z"/><path d="M0,0 V40 L150,90 L300,30 L450,100 L600,40 L750,110 L900,50 L1050,95 L1200,35 V0 Z"/>' },
+};
+let shapePos = 'top';
+const shapeOf = (sec, pos) => sec && sec.components().find(c => c.getClasses().includes('lp-shape-' + pos));
+
+function shapeHtml(pos, o) {
+  const flip = o.flip ? ' scaleX(-1)' : '';
+  return `<div class="lp-shape lp-shape-${pos}" data-shape="${o.type}" data-h="${o.h}" data-w="${o.w}" data-color="${o.color}" data-flip="${o.flip ? 1 : 0}" data-front="${o.front ? 1 : 0}" style="height:${o.h}px;color:${o.color};">` +
+    `<svg viewBox="0 0 1200 120" preserveAspectRatio="none" fill="currentColor" style="width:${o.w}%;transform:translateX(-50%)${flip};">${SHAPES[o.type].svg}</svg></div>`;
+}
+function currentShape(sec, pos) {
+  const c = shapeOf(sec, pos);
+  const a = c ? c.getAttributes() : {};
+  return { type: a['data-shape'] || '', h: +a['data-h'] || 70, w: +a['data-w'] || 100, color: a['data-color'] || '#ffffff', flip: a['data-flip'] === '1', front: a['data-front'] === '1' };
+}
+function setShape(patch) {
+  const sec = editor.getSelected();
+  if (!sec) return;
+  const o = { ...currentShape(sec, shapePos), ...patch };
+  const old = shapeOf(sec, shapePos);
+  if (old) old.remove();
+  if (o.type && SHAPES[o.type]) {
+    sec.append(shapeHtml(shapePos, o), { at: shapePos === 'top' ? 0 : sec.components().length });
+  }
+  const has = shapeOf(sec, 'top') || shapeOf(sec, 'bottom');
+  has ? sec.addClass('lp-has-shape') : sec.removeClass('lp-has-shape');
+  renderShape();
+}
+function renderShape() {
+  const sec = editor && editor.getSelected();
+  const show = !IS_EMAIL && !!sec && isSection(sec);
+  $('#shapeCard').style.display = show ? '' : 'none';
+  if (!show) return;
+  const o = currentShape(sec, shapePos);
+  $$('#shapePos button').forEach(b => b.classList.toggle('active', b.dataset.pos === shapePos));
+  $$('#shapeGrid button').forEach(b => b.classList.toggle('active', b.dataset.shape === o.type));
+  $('#shapeOpts').style.display = o.type ? '' : 'none';
+  $('#shapeColor').value = toHex(o.color);
+  $('#shapeH').value = $('#shapeHn').value = o.h;
+  $('#shapeW').value = $('#shapeWn').value = o.w;
+  $('#shapeFlip').checked = o.flip;
+  $('#shapeFront').checked = o.front;
+}
+function setupShapes() {
+  $('#shapeGrid').innerHTML = `<button type="button" data-shape=""><svg viewBox="0 0 1200 120"><path d="M100 60h1000" stroke="currentColor" stroke-width="8" stroke-dasharray="40 30"/></svg>None</button>` +
+    Object.entries(SHAPES).map(([k, v]) => `<button type="button" data-shape="${k}"><svg viewBox="0 0 1200 120" preserveAspectRatio="none" fill="currentColor">${v.svg}</svg>${v.label}</button>`).join('');
+  $$('#shapeGrid button').forEach(b => b.onclick = () => setShape({ type: b.dataset.shape }));
+  $$('#shapePos button').forEach(b => b.onclick = () => { shapePos = b.dataset.pos; renderShape(); });
+  $('#shapeColor').oninput = () => { const c = shapeOf(editor.getSelected(), shapePos); if (c && c.getEl()) c.getEl().style.color = $('#shapeColor').value; };
+  $('#shapeColor').onchange = () => setShape({ color: $('#shapeColor').value });
+  [['#shapeH', '#shapeHn', 'h', 'height', 'px'], ['#shapeW', '#shapeWn', 'w', null, '%']].forEach(([r, n, key]) => {
+    $(r).oninput = () => {
+      $(n).value = $(r).value;
+      const c = shapeOf(editor.getSelected(), shapePos), el = c && c.getEl();
+      if (!el) return;
+      if (key === 'h') el.style.setProperty('height', $(r).value + 'px', 'important');
+      else el.querySelector('svg').style.setProperty('width', $(r).value + '%', 'important');
+    };
+    const clamp = v => key === 'h' ? Math.min(Math.max(v, 10), 600) : Math.min(Math.max(v, 100), 400);
+    $(r).onchange = () => setShape({ [key]: clamp(+$(r).value) });
+    $(n).onchange = () => { const v = parseFloat($(n).value); if (!isNaN(v)) setShape({ [key]: clamp(v) }); else renderShape(); };
+  });
+  $('#shapeFlip').onchange = () => setShape({ flip: $('#shapeFlip').checked });
+  $('#shapeFront').onchange = () => setShape({ front: $('#shapeFront').checked });
+}
+
+/* ---------------- Live blocks: edit their content without leaving the editor ---------------- */
+const LIVE_EDIT = {
+  header: ['brand', 'This block shows the <b>company and partner logos</b>.', 'Change logos & colours'],
+  'email-header': ['brand', 'This block shows the <b>company and partner logos</b>.', 'Change logos'],
+  banner: ['brand', 'This block shows the <b>campaign banner image</b>.', 'Change the banner'],
+  'banner-slim': ['brand', 'This block shows the <b>campaign banner image</b>.', 'Change the banner'],
+  'email-banner': ['brand', 'This block shows the <b>campaign banner image</b>.', 'Change the banner'],
+  download: ['brand', 'This block is the <b>PDF download button</b>.', 'Change the PDF / button text'],
+  footer: ['company', 'This block shows your <b>company details</b>.', 'Edit footer details'],
+  'email-footer': ['company', 'This block shows your <b>company details and the unsubscribe link</b>.', 'Edit footer & unsubscribe'],
+  'email-content': ['email', 'This block shows the <b>email text</b>.', 'Edit email text'],
+  'email-cta': ['email', 'This block is the <b>email button</b>.', 'Edit button text & link'],
+  'email-signoff': ['email', 'This block shows the <b>sign-off</b>.', 'Edit sign-off'],
+  form: ['form', 'This is the <b>lead form</b>. Leads go to this portal and the PDF downloads after submitting.', 'Edit form fields & texts'],
+};
+function editLiveBlock(key) {
+  const conf = LIVE_EDIT[key];
+  if (!conf) return;
+  if (conf[0] === 'form') openFormEditor();
+  else openSettings(conf[0]);
+}
+function renderLiveCard() {
+  const sel = editor && editor.getSelected();
+  const key = sel && sel.getAttributes()['data-lp-block'];
+  const conf = key && LIVE_EDIT[key];
+  $('#liveCard').style.display = conf ? 'block' : 'none';
+  if (!conf) return;
+  $('#liveText').innerHTML = conf[1] + ' It updates everywhere when you change it.';
+  $('#liveEdit').textContent = conf[2];
+  $('#liveEdit').onclick = () => editLiveBlock(key);
+}
+
+/* ---------------- Settings (no need to go back to the builder) ---------------- */
+const SET_FONTS = ['', 'Inter', 'Poppins', 'Roboto', 'Open Sans', 'Montserrat', 'Lato', 'Arial', 'Georgia', 'Verdana'];
+async function openSettings(tab = 'brand') {
+  const cfg = await (await fetch(`/api/campaigns/${SLUG}`)).json();
+  const g = (path, d = '') => path.split('.').reduce((o, k) => (o == null ? undefined : o[k]), cfg) ?? d;
+  const files = cfg.files || {};
+  const removed = {};
+  const wrap = document.createElement('div');
+  wrap.className = 'lp-modal';
+  const input = (k, label, ph = '', cls = '') => `<label class="f ${cls}">${label}<input data-k="${k}" value="${esc(g(k))}" placeholder="${esc(ph)}"></label>`;
+  const color = (k, label, d) => `<label class="f">${label}<span class="set-color"><input type="color" data-k="${k}" value="${esc(g(k, d) || d)}"><span>${esc(g(k, d) || d)}</span></span></label>`;
+  const fileBox = (role, label, accept) => `<div class="set-file" data-role="${role}"><b>${label}</b><div class="prev">${files[role] && role !== 'pdf' ? `<img src="/c/${SLUG}/landing-page/assets/${encodeURIComponent(files[role])}?t=${Date.now()}">` : ''}</div>
+    <span class="cur">${files[role] ? '✓ ' + esc(files[role]) : ''}</span><input type="file" accept="${accept}">${files[role] ? '<button type="button" class="rm">Remove</button>' : ''}</div>`;
+  wrap.innerHTML = `
+    <div class="set-tabs">
+      <button type="button" data-t="brand">Logos, banner &amp; colours</button>
+      <button type="button" data-t="company">Company &amp; footer</button>
+      <button type="button" data-t="email">Email</button>
+      <button type="button" data-t="ty">Thank-you page</button>
+    </div>
+    <div class="set-pane" data-p="brand">
+      <div class="set-files">
+        ${fileBox('logo', 'Company logo', 'image/*')}${fileBox('partner_logo', 'Partner logo', 'image/*')}
+        ${fileBox('banner', 'Banner image', 'image/*')}${fileBox('pdf', 'PDF (downloads after the form)', 'application/pdf')}
+      </div>
+      <p class="muted">Tip: drag a file onto a box. White logo? Give the header a dark background below.</p>
+      <div class="set-grid">
+        ${input('partner_name', 'Partner name (logo alt text)')}
+        <label class="f">Page font<select data-k="brand.font">${SET_FONTS.map(f => `<option value="${f}"${g('brand.font') === f ? ' selected' : ''}>${f || 'System (Segoe UI)'}</option>`).join('')}</select></label>
+        ${color('brand.primary_color', 'Main colour (buttons, links)', '#0b5cff')}${color('brand.button_text_color', 'Button text colour', '#ffffff')}
+        ${color('brand.heading_color', 'Heading colour', '#0f172a')}${color('layout.header_bg', 'Header background', '#ffffff')}
+        ${color('brand.footer_bg', 'Footer background', '#0f172a')}${color('brand.footer_text_color', 'Footer text colour', '#cbd5e1')}
+        ${input('ty.download_text', 'PDF button text', 'Download the PDF')}
+      </div>
+    </div>
+    <div class="set-pane" data-p="company"><div class="set-grid">
+      ${input('company.name', 'Company name')}${input('company.website', 'Website', 'https://')}
+      <label class="f full">Address<textarea data-k="company.address">${esc(g('company.address'))}</textarea></label>
+      ${input('company.phone', 'Phone')}${input('company.email', 'Email')}
+      ${input('company.privacy_url', 'Privacy policy URL')}${input('company.terms_url', 'Terms URL')}
+      ${input('company.linkedin', 'LinkedIn')}${input('company.twitter', 'X / Twitter')}
+      ${input('company.facebook', 'Facebook')}${input('company.instagram', 'Instagram')}
+      ${input('company.youtube', 'YouTube')}${input('company.copyright', 'Copyright line', '© 2026 Company. All rights reserved.')}
+    </div></div>
+    <div class="set-pane" data-p="email"><div class="set-grid">
+      ${input('email.subject', 'Subject line', '', 'full')}${input('email.preheader', 'Preheader (inbox preview text)', '', 'full')}
+      ${input('email.cta_text', 'Button text', 'Download Now')}${input('email.cta_url', 'Button link (empty = landing page)', 'auto')}
+      ${input('email.greeting', 'Greeting', 'Hi [First Name],')}${color('email.body_background_color', 'Email background', '#f1f5f9')}
+      <label class="f full">Sign-off<textarea data-k="email.signoff" placeholder="Regards,&#10;Team">${esc(g('email.signoff'))}</textarea></label>
+      ${input('email.unsubscribe_url', 'Unsubscribe link', 'https://… or your email tool’s merge tag', 'full')}
+      ${input('email.footer_note', 'Footer note (why they got this email)', '', 'full')}
+    </div></div>
+    <div class="set-pane" data-p="ty"><div class="set-grid">
+      ${input('ty.heading', 'Heading', 'Thank you!', 'full')}
+      <p class="muted full">The PDF downloads automatically when the thank-you page opens. Change the PDF and its button text under "Logos, banner &amp; colours". The thank-you design itself is edited in the Thank-you tab of this editor.</p>
+    </div></div>
+    <div class="modal-actions"><button type="button" id="setCancel">Cancel</button><button type="button" class="primary" id="setSave">Save settings</button></div>`;
+  const show = t => {
+    wrap.querySelectorAll('.set-tabs button').forEach(b => b.classList.toggle('active', b.dataset.t === t));
+    wrap.querySelectorAll('.set-pane').forEach(p => p.classList.toggle('active', p.dataset.p === t));
+  };
+  wrap.querySelectorAll('.set-tabs button').forEach(b => b.onclick = () => show(b.dataset.t));
+  show(tab);
+  wrap.querySelectorAll('input[type=color]').forEach(c => c.oninput = () => { c.nextElementSibling.textContent = c.value; });
+  wrap.querySelectorAll('.set-file').forEach(box => {
+    const inp = box.querySelector('input[type=file]');
+    const showLocal = () => {
+      const f = inp.files[0];
+      if (!f) return;
+      delete removed[box.dataset.role];
+      box.querySelector('.cur').textContent = 'Selected: ' + f.name;
+      box.querySelector('.prev').innerHTML = f.type.startsWith('image/') ? `<img src="${URL.createObjectURL(f)}">` : '';
+    };
+    inp.onchange = showLocal;
+    ['dragenter', 'dragover'].forEach(ev => box.addEventListener(ev, e => { e.preventDefault(); box.classList.add('over'); }));
+    ['dragleave', 'drop'].forEach(ev => box.addEventListener(ev, () => box.classList.remove('over')));
+    box.addEventListener('drop', e => { e.preventDefault(); if (e.dataTransfer.files.length) { inp.files = e.dataTransfer.files; showLocal(); } });
+    const rm = box.querySelector('.rm');
+    if (rm) rm.onclick = () => { removed[box.dataset.role] = true; inp.value = ''; box.querySelector('.cur').textContent = 'Will be removed when you save'; box.querySelector('.prev').innerHTML = ''; rm.remove(); };
+  });
+  wrap.querySelector('#setCancel').onclick = () => editor.Modal.close();
+  wrap.querySelector('#setSave').onclick = async () => {
+    const settings = { remove_files: removed };
+    wrap.querySelectorAll('[data-k]').forEach(el => {
+      const keys = el.dataset.k.split('.');
+      let o = settings;
+      keys.slice(0, -1).forEach(k => { o = o[k] = o[k] || {}; });
+      o[keys[keys.length - 1]] = el.value;
+    });
+    const fd = new FormData();
+    fd.append('settings', JSON.stringify(settings));
+    wrap.querySelectorAll('.set-file').forEach(b => { const f = b.querySelector('input[type=file]').files[0]; if (f) fd.append(b.dataset.role, f); });
+    const btn = wrap.querySelector('#setSave');
+    btn.disabled = true; btn.textContent = 'Saving…';
+    const res = await fetch(`/api/campaigns/${SLUG}/settings`, { method: 'POST', body: fd });
+    const d = await res.json();
+    if (!res.ok) { btn.disabled = false; btn.textContent = 'Save settings'; alert(d.error || 'Could not save'); return; }
+    BLOCKS = d.blocks; META = d.meta;
+    refreshLiveBlocks();
+    const link = editor.Canvas.getDocument().querySelector('link[href*="/assets/style.css"]');
+    if (link) link.href = link.href.replace(/([?&]v=)\d+/, '$1' + Date.now());
+    editor.Modal.close();
+    setState('Settings saved and published', 'ok');
+  };
+  editor.Modal.open({ title: 'Campaign settings', content: wrap });
+  const dlg = document.querySelector('.gjs-mdl-dialog');
+  if (dlg) dlg.classList.add('lp-wide');
+}
+
 function refreshLiveBlocks() {
   editor.getWrapper().find('[data-lp-block]').forEach(c => c.view && c.view.render());
 }
@@ -1968,6 +2805,10 @@ const CANVAS_CSS = IS_EMAIL ? `
   }
   @media (min-width:621px) { body .lp-hide-desktop { opacity:.3; outline:2px dashed #f59e0b; } }
 ` : `
+  .lp-col:empty, .content:empty, .rich:empty, .lp-box:empty, .container:empty { min-height:110px; display:flex; align-items:center; justify-content:center;
+    border:2px dashed #93c5fd; border-radius:8px; background:#eff6ff; }
+  .lp-col:empty::before, .content:empty::before, .rich:empty::before, .lp-box:empty::before, .container:empty::before {
+    content:'+ Drag a widget here'; color:#2563eb; font:600 13px/1.3 sans-serif; pointer-events:none; }
   @media (min-width:992px) { body .lp-hide-desktop { display:revert !important; opacity:.45; outline:2px dashed #f59e0b; outline-offset:-2px; position:relative; }
     body .lp-hide-desktop:not(img):not(input):not(hr)::before { content:'Hidden on desktop'; position:absolute; top:0; left:0; z-index:5; background:#f59e0b; color:#111; font:600 11px/1 sans-serif; padding:3px 6px; border-radius:0 0 4px 0; pointer-events:none; } }
   @media (min-width:768px) and (max-width:991px) { body .lp-hide-tablet { display:revert !important; opacity:.45; outline:2px dashed #f59e0b; outline-offset:-2px; position:relative; }
@@ -2080,12 +2921,14 @@ async function init() {
 
   editor.Commands.add('lp:add', { run(ed) { openAdd(ed.getSelected()); } });
   addBlocks(editor.BlockManager);
+  initHorizontalMenuControls();
   fetch(`/api/campaigns/${SLUG}/media`).then(r => r.json()).then(d => editor.AssetManager.add(d.data || []));
 
   editor.on('load', () => {
     editor.runCommand('core:component-outline');
     applyCustomCss();
     nameTree(editor.getWrapper());
+    applyDropRules(editor.getWrapper());
     editor.clearDirtyCount();
     dirty = false;
     let seen = false;
@@ -2097,6 +2940,10 @@ async function init() {
     renderEmailWidth();
   });
   editor.on('update', () => { if (editor.getDirtyCount()) markDirty(); });
+  editor.on('component:selected', () => {
+    renderHorizontalMenu();
+  });
+
   editor.on('component:dblclick', c => {
     const cta = ctaTarget(c);
     if (cta) { editor.select(cta); setTimeout(() => { const t = $('#ctaTextInput'); showPane('layout'); t.focus(); t.select(); }, 80); return; }
@@ -2111,12 +2958,15 @@ async function init() {
     $('#formActions').style.display = sel && sel.getAttributes()['data-lp-block'] === 'form' ? 'flex' : 'none';
     renderVisibility();
     renderSpacing();
+    renderShape();
+    renderLiveCard();
     renderAdvanced();
     renderCrumbs();
     renderTextAlign();
     renderCtaText();
     renderLiveEdit();
     renderRichText();
+    renderHorizontalMenu();
     renderCard();
     renderButtonSettings();
     if (sel) enhanceSelected(sel);
@@ -2130,8 +2980,11 @@ async function init() {
   editor.on('component:styleUpdate', c => { convertCellMargin(c); renderTextAlign(); if (!spDrag) { renderSpacing(); renderLayout(); } });
   setupSpacing();
   setupLayout();
+  setupShapes();
+  editor.on('component:hover', c => { hoverSection = topSection(c); });
+  editor.on('load', () => editor.Canvas.getDocument().addEventListener('mouseleave', () => { hoverSection = null; }));
   requestAnimationFrame(overlayLoop);
-  editor.on('component:add', c => { nameTree(c); });
+  editor.on('component:add', c => { nameTree(c); applyDropRules(c); });
   editor.on('component:update:attributes', () => renderAdvanced());
   new MutationObserver(() => enhanceColorFields($('#styles'))).observe($('#styles'), { childList: true, subtree: true });
   enhanceColorFields($('#styles'));
@@ -2236,7 +3089,9 @@ if (IS_EMAIL) {
   $('#visCard [data-cls=lp-hide-tablet]').style.display = 'none';
   $('#visCard .vis-btns').style.setProperty('--n', 2);
 }
-$('#addSection').onclick = () => { editor.select(null); openAdd(null); };
+$('#addSection').onclick = () => openStructure(null);
+$('#secPlus').onclick = () => openStructure(hoverSection);
+$('#setBtn').onclick = () => openSettings();
 $('#undo').onclick = () => editor.UndoManager.undo();
 $('#redo').onclick = () => editor.UndoManager.redo();
 $('#outline').onclick = () => {
@@ -2326,3 +3181,4 @@ init().catch(err => {
 </script>
 </body>
 </html>
+<!-- https://valasysb2bmarketing.com/AB-Tata-TCS-Signature-Collection-Article-List-Program/ -->
