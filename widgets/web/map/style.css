@@ -1,0 +1,2 @@
+.lp-map { margin: 0 0 16px; }
+.lp-map iframe { display: block; width: 100%; height: 360px; border: 0; border-radius: var(--radius, 8px); }

@@ -1,0 +1,7 @@
+.lp-icon-list { list-style: none; padding: 0; margin: 0 0 16px; }
+.lp-icon-list li { position: relative; padding-left: 30px; margin-bottom: 10px; }
+.lp-icon-list li::before { position: absolute; left: 0; top: 0; width: 22px; text-align: center; font-weight: 700; color: var(--primary); }
+.lp-il-check li::before { content: "✓"; }
+.lp-il-arrow li::before { content: "→"; }
+.lp-il-dot li::before { content: "•"; font-size: 1.4em; line-height: 1; }
+.lp-il-star li::before { content: "★"; }

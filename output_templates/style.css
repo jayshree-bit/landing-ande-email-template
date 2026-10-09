@@ -185,6 +185,7 @@ a { color: var(--primary); }
 .lp-video { position: relative; padding-top: 56.25%; }
 .lp-video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 .visual-body [data-lp-block] { display: block; }
+/* Each widget's own styles are added after this file from widgets/web/<name>/style.css */
 @media (max-width: 767px) {
   .lp-row { flex-direction: column; }
   .lp-col { flex-basis: auto !important; width: 100% !important; }
@@ -242,3 +243,12 @@ html.lp-js [data-anim]:not(.lp-anim-in) { opacity: 0; }
 .lp-hover-glow:hover { box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 35%, transparent), 0 8px 24px color-mix(in srgb, var(--primary) 30%, transparent); }
 .lp-hover-brighten:hover { filter: brightness(1.12); }
 .lp-hover-dim:hover { opacity: .8; }
+
+/* Visual editor: shape dividers (top / bottom of a section) */
+.lp-has-shape { position: relative; overflow: hidden; }
+.lp-has-shape > *:not(.lp-shape) { position: relative; z-index: 1; }
+.lp-shape { position: absolute; left: 0; width: 100%; overflow: hidden; line-height: 0; pointer-events: none; z-index: 0; }
+.lp-shape-top { top: -1px; }
+.lp-shape-bottom { bottom: -1px; transform: rotate(180deg); }
+.lp-shape svg { display: block; position: relative; left: 50%; height: 100%; min-width: 100%; }
+.lp-shape[data-front="1"] { z-index: 2; }

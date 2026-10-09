@@ -1,0 +1,3 @@
+.lp-sponsor { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; margin: 0 0 16px; }
+.lp-sponsor-label { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted, #64748b); }
+.lp-sponsor img { display: block; height: 40px; width: auto; max-width: 220px; object-fit: contain; }

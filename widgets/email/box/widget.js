@@ -1,0 +1,2 @@
+widget({ page: 'email', id: 'box', label: 'Highlight box', category: 'Email layout', order: 7,
+  content: () => T(`<td style="padding:12px 40px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="background-color:#f1f5f9;border-radius:8px;padding:20px;${FONT}font-size:15px;line-height:24px;color:#333333;"><strong>Key takeaway:</strong> highlight one important point here.</td></tr></table></td>`) });

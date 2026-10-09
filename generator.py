@@ -314,9 +314,8 @@ def build(slug, public_base):
                            visual_fonts=sorted(f for f in GOOGLE_FONTS if f in css and f != ctx["google_font"]))
                 else:
                     render(template, lp / dest)
-            render("style.css", lp / "assets" / "style.css")
-            render("script.js", lp / "assets" / "script.js")
-            render("effects.js", lp / "assets" / "effects.js")
+            for name in ("style.css", "script.js", "effects.js"):
+                (lp / "assets" / name).write_text(render_asset(name, ctx), encoding="utf-8")
 
             design = load_visual(slug, "email") if cfg["visual"].get("email") else None
             if design:
@@ -332,6 +331,42 @@ def build(slug, public_base):
 
 VISUAL_PAGES = ("landing", "thankyou", "email")
 MOBILE_MAX = 767
+# ---------------------------------------------------------------- widgets
+# Each editor widget is a folder in widgets/web/ or widgets/email/: widget.js (editor), plus optional style.css and
+# runtime.js that are added to the published page's stylesheet and script.
+WIDGETS_DIR = BASE / "widgets"
+EDITOR_JS_DIR = BASE / "static" / "editor" / "js"
+
+
+def widget_files(name, kind="web"):
+    return sorted((WIDGETS_DIR / kind).glob(f"*/{name}"))
+
+
+def widget_assets(name):
+    """All widgets' style.css or runtime.js, joined, each marked with its widget's folder."""
+    return "".join(f"\n/* widget: {p.parent.name} */\n{p.read_text(encoding='utf-8').strip()}\n" for p in widget_files(name))
+
+
+def render_asset(name, ctx):
+    """A page asset (style.css, script.js, effects.js), with the widgets' style.css / runtime.js added."""
+    text = env.get_template(name).render(**ctx)
+    extra = {"style.css": "style.css", "effects.js": "runtime.js"}.get(name)
+    return text + widget_assets(extra) if extra else text
+
+
+def editor_bundle():
+    """The editor script: static/editor/js/*.js in name order, every widget.js before the start-up file (99-*)."""
+    core = sorted(EDITOR_JS_DIR.glob("*.js"))
+    start = [p for p in core if p.name.startswith("99-")]
+    parts = [p for p in core if p not in start] + widget_files("widget.js", "web") + widget_files("widget.js", "email") + start
+    return "\n".join(f"// ===== {p.relative_to(BASE).as_posix()} =====\n{p.read_text(encoding='utf-8')}" for p in parts)
+
+
+def editor_assets_version():
+    files = list((BASE / "static" / "editor").rglob("*")) + list(WIDGETS_DIR.rglob("*"))
+    return str(int(max((f.stat().st_mtime for f in files if f.is_file()), default=0)))
+
+
 # Placeholders the editor stores as <div data-lp-block="name"></div>; filled with live campaign markup at build time.
 BLOCK_RE = re.compile(r'<div([^>]*\sdata-lp-block="([a-z-]+)"[^>]*)>\s*</div>')
 
@@ -560,6 +595,7 @@ TEMPLATE_LIBRARY = {
         ("centered", "Centered minimal", "Clean, centred headline with the form in the middle of the page."),
         ("dark", "Bold dark", "High-contrast dark design with a checklist and a call-to-action band."),
         ("ebook", "eBook showcase", "Shows the asset cover next to the benefits, then the form."),
+        ("signature", "Signature Collection", "Logo and menu bar, sponsor headline, article cards, sign-up form and an about section."),
     ],
     "thankyou": [
         ("classic", "Classic card", "A centred card with the download button."),

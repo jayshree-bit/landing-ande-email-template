@@ -1,0 +1,5 @@
+.lp-image-box { margin: 0 0 16px; }
+.lp-image-box > img { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; border-radius: var(--radius, 8px); margin: 0 0 14px; }
+.lp-image-box h3 { margin: 0 0 8px; color: var(--heading); font-size: 20px; }
+.lp-image-box p { margin: 0 0 10px; color: #475569; }
+.lp-image-box a { font-weight: 700; text-decoration: none; }

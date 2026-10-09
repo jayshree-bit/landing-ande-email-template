@@ -1,0 +1,105 @@
+{
+  "campaign_name": "test",
+  "slug": "test",
+  "partner_name": "",
+  "partner_label": "",
+  "brand": {
+    "primary_color": "#0b5cff",
+    "button_text_color": "#ffffff",
+    "heading_color": "#0f172a",
+    "footer_bg": "#0f172a"
+  },
+  "layout": {},
+  "lp": {
+    "form_title": "Enter your email address to unlock this Signature Collection",
+    "submit_text": "REGISTER TO UNLOCKG",
+    "fields": [
+      {
+        "label": "Email",
+        "name": "email",
+        "id": "f_email",
+        "type": "email",
+        "required": true,
+        "width": "full",
+        "placeholder": "Email",
+        "options": [],
+        "css_class": ""
+      },
+      {
+        "label": "First Name",
+        "name": "first_name",
+        "id": "f_first_name",
+        "type": "text",
+        "required": true,
+        "width": "full",
+        "placeholder": "First Name",
+        "options": [],
+        "css_class": ""
+      },
+      {
+        "label": "Last Name",
+        "name": "last_name",
+        "id": "f_last_name",
+        "type": "text",
+        "required": true,
+        "width": "full",
+        "placeholder": "Last Name",
+        "options": [],
+        "css_class": ""
+      },
+      {
+        "label": "Job Title",
+        "name": "job_title",
+        "id": "f_job_title",
+        "type": "text",
+        "required": true,
+        "width": "full",
+        "placeholder": "Job Title",
+        "options": [],
+        "css_class": ""
+      },
+      {
+        "label": "Company",
+        "name": "company",
+        "id": "f_company",
+        "type": "text",
+        "required": true,
+        "width": "full",
+        "placeholder": "Company",
+        "options": [],
+        "css_class": ""
+      },
+      {
+        "label": "Phone Number",
+        "name": "phone_number",
+        "id": "f_phone_number",
+        "type": "tel",
+        "required": true,
+        "width": "full",
+        "placeholder": "Phone Number",
+        "options": [],
+        "css_class": ""
+      }
+    ],
+    "consent_text": "<p>I consent that Tata Consultancy Services can use my contact information for the purpose of sending me details about their products, services, and events. The processing of your data by TCS will be in accordance with the <a href=\"https://www.tcs.com/who-we-are/legal/tcs-privacy-notice\" target=\"_blank\">TCS Privacy Notice</a> and you can unsubscribe any time by following the guidelines in the Privacy Notice.</p><p>We will send this information to Tata Consultancy Services, subject to Arizent's <a href=\"https://www.arizent.com/\" target=\"_blank\">Privacy Policy.</a></p>",
+    "consent_type": "checkbox",
+    "form_intro": ""
+  },
+  "ty": {
+    "heading": "Thank you!",
+    "download_text": "Download the PDF"
+  },
+  "email": {
+    "cta_text": "Download Now"
+  },
+  "company": {},
+  "notify": {},
+  "files": {},
+  "visual": {
+    "landing": true,
+    "thankyou": true,
+    "email": true
+  },
+  "created_at": "2026-10-08T11:02:55.653744+00:00",
+  "updated_at": "2026-10-09T20:05:10.151007+00:00"
+}

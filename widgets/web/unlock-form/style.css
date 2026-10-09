@@ -1,0 +1,4 @@
+.lp-unlock { max-width: 640px; margin: 0 auto 16px; text-align: center; }
+.lp-unlock-title { color: var(--heading); font-size: 22px; line-height: 1.35; margin: 0 0 18px; }
+.lp-form-compact .form-card { position: static; background: transparent; border: 0; box-shadow: none; padding: 0; text-align: left; }
+.lp-form-compact .form-card > h2, .lp-form-compact .form-card > .form-intro { display: none; }

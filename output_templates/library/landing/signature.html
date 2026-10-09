@@ -1,0 +1,79 @@
+{# Signature Collection: logo + menu bar, centred headline with the sponsor, article cards, sign-up form, about. #}
+<header class="lp-nav-bar" id="top">
+  <div class="container lp-nav-inner">
+    {% if files.logo %}<a class="lp-nav-logo" href="#top"><img src="assets/{{ files.logo }}" alt="{{ company.name or campaign_name }}"></a>
+    {% else %}<h3 style="margin:0;">{{ company.name or campaign_name }}</h3>{% endif %}
+    <nav class="lp-nav" style="justify-content:flex-end;">
+      <a href="#top">Overview</a>
+      <a href="#articles">The collection</a>
+      <a href="#about">About</a>
+      <a href="#form">Unlock access</a>
+    </nav>
+  </div>
+</header>
+<section class="lp-section t-sig-hero">
+  <div class="container">
+    <p class="t-sig-kicker">Signature Collection</p>
+    <h1>{{ t.signature_headline }}</h1>
+    {% if files.partner_logo %}
+    <div class="t-sig-sponsor"><span>{{ partner_label or 'Presented by' }}</span><img src="assets/{{ files.partner_logo }}" alt="{{ partner_name or 'Partner' }}"></div>
+    {% endif %}
+    <p class="t-sig-unlock">Unlock this Signature Collection. Gain complimentary access to premium articles now.</p>
+    <a class="lp-btn" href="#form">Register to unlock</a>
+  </div>
+</section>
+<section class="lp-section t-sig-intro">
+  <div class="container">
+    <p>{{ t.intro }}</p>
+  </div>
+</section>
+<section class="lp-section"><p class="lp-notice">Hurry: your limited-time access to this collection expires in 30 days.</p></section>
+<section class="lp-section t-sig-articles" id="articles">
+  <div class="container">
+    <h2>This Signature Collection includes</h2>
+    <div class="lp-cards">
+      {% for item in t.signature_articles[:4] %}
+      <div class="lp-card">
+        {% if item.image %}<img src="{{ item.image }}" alt="">{% elif files.banner %}<img src="assets/{{ files.banner }}" alt="">{% endif %}
+        <div class="lp-card-body">
+          <p class="lp-card-label">Signature collection</p>
+          <h3><a href="#form">{{ item.title }}</a></h3>
+          {% if item.byline %}<p class="lp-card-by">By {{ item.byline }}</p>{% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+<section class="lp-section t-sig-register">
+  <div class="container">
+    <h2>Enter your details to unlock this Signature Collection</h2>
+    <div class="t-sig-form"><div data-lp-block="form"></div></div>
+  </div>
+</section>
+<section class="lp-section t-sig-about">
+  <div class="container" id="about">
+    <h3>About {{ company.name or 'us' }}</h3>
+    <p>{{ company.name or 'We are' }}{{ ' is' if company.name }} the essential resource for senior executives, with trusted news, analysis and insight for the decisions that matter.</p>
+  </div>
+</section>
+<div data-lp-block="footer"></div>
+<style>
+.t-sig-hero { padding:64px 0 40px; text-align:center; background:#fff; }
+.t-sig-kicker { display:inline-block; font-size:12px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--primary); border:1px solid currentColor; border-radius:20px; padding:4px 14px; margin:0 0 18px; }
+.t-sig-hero h1 { font-family:Georgia, 'Times New Roman', serif; color:var(--heading); font-size:clamp(28px, 4vw, 44px); line-height:1.2; max-width:900px; margin:0 auto 22px; }
+.t-sig-sponsor { display:flex; align-items:center; justify-content:center; gap:12px; margin:0 0 20px; }
+.t-sig-sponsor span { font-size:12px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); }
+.t-sig-sponsor img { height:40px; width:auto; max-width:200px; object-fit:contain; }
+.t-sig-unlock { font-size:18px; color:#475569; max-width:640px; margin:0 auto 22px; }
+.t-sig-intro { padding:0 0 36px; }
+.t-sig-intro p { max-width:820px; margin:0 auto; font-size:17px; line-height:1.7; color:#334155; text-align:center; }
+.t-sig-articles { padding:56px 0; background:#f8fafc; }
+.t-sig-articles h2, .t-sig-register h2 { text-align:center; font-family:Georgia, 'Times New Roman', serif; color:var(--heading); font-size:28px; margin:0 0 28px; }
+.t-sig-register { padding:56px 0; }
+.t-sig-form { max-width:620px; margin:0 auto; }
+.t-sig-form .form-card { position:static; }
+.t-sig-about { padding:44px 0; background:#f1f5f9; border-top:1px solid var(--line); }
+.t-sig-about h3 { margin:0 0 10px; color:var(--heading); }
+.t-sig-about p { margin:0; color:#475569; max-width:820px; }
+</style>

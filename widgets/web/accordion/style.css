@@ -1,0 +1,8 @@
+.lp-accordion { margin: 0 0 16px; }
+.lp-acc-item { border: 1px solid var(--line); border-radius: var(--radius, 8px); background: #fff; margin-bottom: 10px; overflow: hidden; }
+.lp-acc-item > summary { cursor: pointer; list-style: none; position: relative; padding: 14px 48px 14px 18px; font-weight: 700; color: var(--heading); }
+.lp-acc-item > summary::-webkit-details-marker { display: none; }
+.lp-acc-item > summary::after { content: "+"; position: absolute; right: 18px; top: 50%; transform: translateY(-50%); font-size: 22px; font-weight: 400; color: var(--primary); }
+.lp-acc-item[open] > summary::after { content: "−"; }
+.lp-acc-body { padding: 0 18px 14px; color: #475569; }
+.lp-acc-body p { margin: 0; }

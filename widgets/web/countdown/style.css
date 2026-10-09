@@ -1,0 +1,6 @@
+.lp-countdown { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin: 0 0 16px; }
+.lp-cd-unit { min-width: 84px; padding: 14px 10px; border-radius: var(--radius, 8px); background-color: #0f172a; color: #fff; text-align: center; }
+.lp-cd-unit b { display: block; font-size: 34px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.lp-cd-unit span { display: block; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; opacity: .75; margin-top: 4px; }
+.lp-countdown.lp-cd-ended { opacity: .6; }
+@media (max-width: 520px) { .lp-cd-unit { min-width: 64px; } .lp-cd-unit b { font-size: 26px; } }

@@ -1,0 +1,4 @@
+.lp-social { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-start; margin: 0 0 16px; }
+.lp-social a { width: 40px; height: 40px; border-radius: 50%; background-color: var(--primary); color: #fff; display: inline-flex; align-items: center; justify-content: center; transition: transform .15s, filter .15s; }
+.lp-social a:hover { transform: translateY(-2px); filter: brightness(1.1); }
+.lp-social svg { width: 18px; height: 18px; fill: currentColor; }

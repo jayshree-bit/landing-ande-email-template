@@ -1,0 +1,7 @@
+.lp-testimonial { background: #fff; border: 1px solid var(--line); border-radius: var(--radius, 8px); padding: 24px; margin: 0 0 16px; }
+.lp-stars { color: #f59e0b; font-size: 18px; letter-spacing: 2px; margin: 0 0 10px; }
+.lp-t-quote { font-size: 18px; line-height: 1.6; font-style: italic; color: var(--heading); margin: 0 0 18px; }
+.lp-t-person { display: flex; align-items: center; gap: 12px; }
+.lp-t-person img { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; display: block; }
+.lp-t-name { font-weight: 700; margin: 0; color: var(--heading); }
+.lp-t-role { margin: 0; font-size: 14px; color: var(--muted, #64748b); }

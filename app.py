@@ -261,7 +261,7 @@ def template_preview(kind, tid):
 @app.get("/templates/demo/assets/<path:name>")
 def demo_asset(name):
     if name in ("style.css", "script.js", "effects.js"):
-        text = gen.env.get_template(name).render(**gen.demo_context())
+        text = gen.render_asset(name, gen.demo_context())
         return Response(text, mimetype="text/css" if name.endswith(".css") else "application/javascript")
     if name in gen.DEMO_SVGS:
         return Response(gen.DEMO_SVGS[name], mimetype="image/svg+xml")
@@ -314,6 +314,12 @@ def _require(slug, page=None):
         abort(404)
 
 
+@app.get("/editor-bundle.js")
+def editor_bundle():
+    """The editor's code, joined from static/editor/js and widgets/ (see generator.editor_bundle)."""
+    return Response(gen.editor_bundle(), mimetype="application/javascript", headers={"Cache-Control": "no-cache"})
+
+
 @app.get("/editor/<slug>")
 @app.get("/editor/<slug>/<page>")
 def visual_editor(slug, page="landing"):
@@ -323,7 +329,7 @@ def visual_editor(slug, page="landing"):
     font = (cfg.get("brand") or {}).get("font") or ""
     return render_template("editor.html", slug=slug, page=page, name=cfg.get("campaign_name", slug),
                            google_font=font if font in gen.GOOGLE_FONTS else "",
-                           google_fonts=sorted(gen.GOOGLE_FONTS))
+                           google_fonts=sorted(gen.GOOGLE_FONTS), asset_v=gen.editor_assets_version())
 
 
 @app.get("/api/campaigns/<slug>/visual/<page>")
