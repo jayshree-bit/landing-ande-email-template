@@ -10,32 +10,37 @@
   <style>
     body { margin:0; padding:0; width:100% !important; -webkit-text-size-adjust:100%; -ms-text-size-adjust:100%; }
     table { border-collapse:collapse; mso-table-lspace:0pt; mso-table-rspace:0pt; }
-    img { border:0; outline:none; text-decoration:none; -ms-interpolation-mode:bicubic; display:block; }
+    img { border:0; outline:none; text-decoration:none; -ms-interpolation-mode:bicubic; }
     a { color:#0b5cff; }
+    [data-lp-block] { display:block; }
     @media screen and (max-width:620px) {
-      .container { width:100% !important; }
+      .email-container { width:100% !important; }
       .px { padding-left:20px !important; padding-right:20px !important; }
+      .stack { display:block !important; width:100% !important; max-width:100% !important; }
       .logo-cell { display:block !important; width:100% !important; text-align:center !important; padding:6px 0 !important; }
       .logo-cell img { margin:0 auto !important; }
-      .h1 { font-size:22px !important; line-height:30px !important; }
+      .lp-hide-mobile { display:none !important; max-height:0 !important; overflow:hidden !important; }
     }
-  </style>
-</head>
-<body style="margin:0;padding:0;background-color:#f1f5f9;">
+    @media screen and (min-width:621px) { .lp-hide-desktop { display:none !important; } }
 
+  </style>
+<style>
+/* widget: nav */
+/* Phones: ☰ opens the links in mail apps that keep the checkbox (Apple Mail, iOS Mail). Where the checkbox is removed
+   (Gmail, Outlook) these first two rules match nothing, so the ☰ stays hidden and the links stay visible, one per line. */
+@media screen and (max-width: 620px) {
+  .em-nav-cb ~ .em-nav-burger { display: block !important; }
+  .em-nav-cb:not(:checked) ~ .em-nav-links { display: none !important; }
+  .em-nav-links a { display: block !important; padding: 10px 0 !important; border-top: 1px solid #e2e8f0 !important; }
+}
+
+  </style></head>
+<body style="margin:0;padding:0;background-color:#f1f5f9;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f1f5f9;">
     <tr>
       <td align="center" style="padding:24px 10px;">
-        <table role="presentation" class="container" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;">
-          <tr>
-            <td align="right" style="padding:0 4px 10px 4px;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#64748b;">
-              <a href="http://127.0.0.1:5050/c/gdgdfgfdgf/landing-page/index.html" target="_blank" style="color:#64748b;text-decoration:underline;">View landing page</a>
-            </td>
-          </tr>
-        </table>
-
-        <table role="presentation" class="container" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;background-color:#ffffff;border-radius:8px;overflow:hidden;">
-          <tr><td style="padding:0;">          <!-- Header: logo + partner logo -->
+        <!--[if mso]><table role="presentation" width="600" align="center" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
+        <div data-lp-block="email-header">          <!-- Header: logo + partner logo -->
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
             <td class="px" style="padding:20px 32px;border-bottom:1px solid #e2e8f0;background-color:#ffffff;">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
@@ -48,49 +53,52 @@
               </table>
             </td>
           </tr></table>
-</td></tr>
-
-          <tr><td style="padding:0;"></td></tr>
-
-          <tr><td style="padding:0;">          <!-- Body -->
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
-            <td class="px" style="padding:32px 40px 8px 40px;">
-              
-            </td>
-          </tr></table>
-</td></tr>
-
-          <tr><td style="padding:0;">          <!-- CTA button (bulletproof, incl. Outlook VML) -->
+</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f7f7f7; font-family:Arial, sans-serif; font-size:14px;">
+  <tr>
+    <td align="center" style="padding:20px;">
+      <table width="600" cellpadding="0" cellspacing="0" border="0" align="center" style="background-color:#ffffff; border:1px solid #ddd; border-radius:6px;">
+        <tr>
+          <td align="center" style="padding:20px;">
+            <a href="http://192.168.1.142:5050/c/gdgdfgfdgf/landing-page/index.html" style="text-decoration:none; color:#0b5cff; font-size:24px; font-weight:bold;">gdgdfgfdgf</a>
+            <br>
+            <a href="http://192.168.1.142:5050/c/gdgdfgfdgf/landing-page/index.html" style="text-decoration:none; color:#666; font-size:14px;">Menu</a>
+            <br>
+            <img src="https://placehold.co/50x50" alt="Logo" width="50">
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<div data-lp-block="email-cta">          <!-- CTA button (bulletproof, incl. Outlook VML) -->
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
             <td align="center" class="px" style="padding:8px 40px 28px 40px;">
               <!--[if mso]>
-              <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="http://127.0.0.1:5050/c/gdgdfgfdgf/landing-page/index.html" style="height:48px;v-text-anchor:middle;width:280px;" arcsize="12%" stroke="f" fillcolor="#0b5cff">
+              <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="http://192.168.1.142:5050/c/gdgdfgfdgf/landing-page/index.html" style="height:48px;v-text-anchor:middle;width:280px;" arcsize="12%" stroke="f" fillcolor="#0b5cff">
                 <w:anchorlock/>
                 <center style="color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;">Download Now</center>
               </v:roundrect>
               <![endif]-->
               <!--[if !mso]><!-- -->
-              <a href="http://127.0.0.1:5050/c/gdgdfgfdgf/landing-page/index.html" target="_blank" style="display:inline-block;background-color:#0b5cff;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;line-height:48px;text-align:center;text-decoration:none;padding:0 36px;border-radius:6px;-webkit-text-size-adjust:none;">Download Now</a>
+              <a href="http://192.168.1.142:5050/c/gdgdfgfdgf/landing-page/index.html" target="_blank" style="display:inline-block;background-color:#0b5cff;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;line-height:48px;text-align:center;text-decoration:none;padding:0 36px;border-radius:6px;-webkit-text-size-adjust:none;">Download Now</a>
               <!--<![endif]-->
             </td>
           </tr></table>
-</td></tr>
-
-          <tr><td style="padding:0;"></td></tr>
-
-          <tr><td style="padding:0;">          <!-- Footer -->
+</div>
+<div data-lp-block="email-footer">          <!-- Footer -->
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
             <td class="px" style="padding:24px 40px;background-color:#0f172a;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:19px;color:#cbd5e1;" align="center">
               <p style="margin:0 0 10px 0;">
               </p>
               <p style="margin:0;color:#cbd5e1;">
                 If you no longer wish to receive these emails, you can
-                <a href="#" target="_blank" style="color:#cbd5e1;text-decoration:underline;">unsubscribe here</a>.
+                <a href="http://192.168.1.142:5050/c/gdgdfgfdgf/landing-page/index.html" target="_blank" style="color:#cbd5e1;text-decoration:underline;">unsubscribe here</a>.
               </p>
             </td>
           </tr></table>
-</td></tr>
-        </table>
+</div>
+        <!--[if mso]></td></tr></table><![endif]-->
       </td>
     </tr>
   </table>

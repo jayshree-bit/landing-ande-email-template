@@ -1,11 +1,17 @@
-"""AI assistant for the visual editor (Ollama).
+"""AI assistant for the visual editor (Claude API by default, Ollama as fallback).
 
   * "Full campaign": one prompt -> a complete Landing page and Email template, saved as the pages' visual designs.
   * "Section": one prompt -> one section added to / edited on the page you are working on.
 
-Setup:
-    ollama pull llama3.1          # or qwen2.5-coder:7b, mistral, ...
-    (optional .env)  OLLAMA_URL=http://127.0.0.1:11434   OLLAMA_MODEL=llama3.1
+Setup (hosted OpenRouter free-model routing):
+    .env: AI_PROVIDER=openrouter
+          OPENROUTER_API_KEY=your-openrouter-key
+          AI_MODEL=openrouter/free
+Setup (Claude, if configured):
+    .env: ANTHROPIC_API_KEY=your-anthropic-key
+Setup (local fallback):
+    ollama pull llama3.1
+    .env:  OLLAMA_URL=http://127.0.0.1:11434   OLLAMA_MODEL=llama3.1
 App wiring (app.py, before `if __name__ == "__main__":`):
     import ai_assistant; ai_assistant.register(app)
 """
@@ -13,6 +19,7 @@ import json
 import os
 import re
 import shutil
+import urllib.error
 import urllib.request
 from datetime import datetime, timezone
 
@@ -75,8 +82,41 @@ ENDCAP = {
 }
 
 
+CLAUDE_MODELS = ["claude-haiku-5-5", "claude-sonnet-5-5", "claude-opus-5-5"]
+CLAUDE_DEFAULT = "claude-haiku-5-5"  # fastest; switch to claude-sonnet-5-5 for richer pages
+
+
 def _ollama_url():
     return os.environ.get("OLLAMA_URL", "http://127.0.0.1:11434").rstrip("/")
+
+
+def _provider():
+    """Choose the configured AI provider."""
+    forced = (os.environ.get("AI_PROVIDER") or "").strip().lower()
+    if forced in ("anthropic", "ollama", "openrouter"):
+        return forced
+    if os.environ.get("OPENROUTER_API_KEY"):
+        return "openrouter"
+    return "anthropic" if os.environ.get("ANTHROPIC_API_KEY") else "ollama"
+
+
+def _default_model():
+    if _provider() == "openrouter":
+        return os.environ.get("AI_MODEL") or "openrouter/free"
+
+    if _provider() == "anthropic":
+        return os.environ.get("AI_MODEL") or CLAUDE_DEFAULT
+
+    return os.environ.get("OLLAMA_MODEL") or "llama3.1"
+
+
+def _pick_model(requested):
+    """Use the model chosen in the UI, unless it belongs to the other provider."""
+    requested = str(requested or "").strip()
+    is_claude = requested.startswith("claude")
+    if _provider() == "anthropic":
+        return requested if is_claude else _default_model()
+    return requested if requested and not is_claude else _default_model()
 
 
 def clean_html(text):
@@ -93,7 +133,26 @@ def clean_html(text):
     return text.strip()
 
 
-def _chat(model, system, user, timeout=420):
+def _chat_anthropic(model, system, user, timeout=120):
+    body = json.dumps({
+        "model": model, "max_tokens": 6000, "temperature": 0.6,
+        "system": system,
+        "messages": [{"role": "user", "content": user}],
+    }).encode()
+    req = urllib.request.Request(
+        "https://api.anthropic.com/v1/messages", data=body,
+        headers={"Content-Type": "application/json", "anthropic-version": "2023-06-01",
+                 "x-api-key": os.environ["ANTHROPIC_API_KEY"]})
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            data = json.load(r)
+    except urllib.error.HTTPError as e:
+        detail = e.read().decode("utf-8", "ignore")[:300]
+        raise RuntimeError(f"Claude API {e.code}: {detail}")
+    return "".join(b.get("text", "") for b in data.get("content", []) if b.get("type") == "text")
+
+
+def _chat_ollama(model, system, user, timeout=420):
     body = json.dumps({
         "model": model, "stream": False,
         "options": {"temperature": 0.6, "num_ctx": 8192, "num_predict": 4096},
@@ -117,6 +176,49 @@ def assemble(page, ai_html):
     parts = [_block(head), html] + [_block(t) for t in tail if f'data-lp-block="{t}"' not in html]
     return "\n".join(parts)
 
+def _chat_openrouter(model, system, user, timeout=120):
+    body = json.dumps({
+        "model": model,
+        "max_tokens": 6000,
+        "temperature": 0.6,
+        "messages": [
+            {"role": "system", "content": system},
+            {"role": "user", "content": user}
+        ]
+    }).encode()
+
+    req = urllib.request.Request(
+        "https://openrouter.ai/api/v1/chat/completions",
+        data=body,
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + os.environ["OPENROUTER_API_KEY"],
+            "X-Title": "Visual Editor AI Assistant"
+        }
+    )
+
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            data = json.load(r)
+    except urllib.error.HTTPError as e:
+        detail = e.read().decode("utf-8", "ignore")[:500]
+        raise RuntimeError(f"OpenRouter API {e.code}: {detail}")
+
+    choices = data.get("choices") or []
+    if not choices or not isinstance(choices[0].get("message", {}).get("content"), str):
+        raise RuntimeError("OpenRouter returned no text content. Check the selected model and API response.")
+    return choices[0]["message"]["content"]
+
+
+def _chat(model, system, user):
+    """Send a prompt to the configured provider."""
+    provider = _provider()
+    if provider == "openrouter":
+        return _chat_openrouter(model, system, user)
+    if provider == "anthropic":
+        return _chat_anthropic(model, system, user)
+    return _chat_ollama(model, system, user)
+
 
 def register(app):
     def ctx(slug):
@@ -125,12 +227,21 @@ def register(app):
 
     @app.get("/api/ai/models")
     def ai_models():
+        provider = _provider()
+        if provider == "anthropic":
+            return jsonify(models=CLAUDE_MODELS, default=_default_model(), provider="anthropic")
+        if provider == "openrouter":
+            if not os.environ.get("OPENROUTER_API_KEY"):
+                return jsonify(error="OPENROUTER_API_KEY is not configured", models=[]), 503
+            # This is a router alias, not a list of every individual model.
+            return jsonify(models=["openrouter/free"], default=_default_model(), provider="openrouter")
         try:
             with urllib.request.urlopen(_ollama_url() + "/api/tags", timeout=5) as r:
                 names = [m["name"] for m in json.load(r).get("models", [])]
         except Exception:
-            return jsonify(error="Ollama is not running. Start it with: ollama serve", models=[]), 503
-        return jsonify(models=names, default=os.environ.get("OLLAMA_MODEL") or (names[0] if names else ""))
+            return jsonify(error="Ollama is not running. Start it with: ollama serve (or configure another provider)",
+                           models=[]), 503
+        return jsonify(models=names, default=_default_model(), provider="ollama")
 
     @app.post("/api/campaigns/<slug>/ai/campaign")
     def ai_campaign(slug):
@@ -144,7 +255,7 @@ def register(app):
             return jsonify(error="page must be landing or email"), 400
         if not prompt:
             return jsonify(error="Write what the campaign is about"), 400
-        model = str(d.get("model") or os.environ.get("OLLAMA_MODEL") or "llama3.1")
+        model = _pick_model(d.get("model"))
         style = STYLES.get(d.get("style"), STYLES["modern"])
         cfg, primary = ctx(slug)
         tmpl, extra = (LANDING_RULES, LANDING_PAGE) if page == "landing" else (EMAIL_RULES, EMAIL_PAGE)
@@ -153,10 +264,10 @@ def register(app):
         try:
             html = clean_html(_chat(model, system, user))
         except Exception as e:
-            app.logger.exception("Ollama request failed")
-            return jsonify(error=f"Could not reach Ollama ({e}). Is `ollama serve` running and the model pulled?"), 502
+            app.logger.exception("AI request failed")
+            return jsonify(error=f"AI request failed: {e}"), 502
         if "<" not in html:
-            return jsonify(error="The model did not return HTML. Try again or pick a bigger model."), 502
+            return jsonify(error="The model did not return HTML. Try again or try again or pick a stronger model."), 502
 
         old = gen.visual_path(slug, page)
         if old.exists():  # keep the previous design so it can be restored
@@ -191,7 +302,7 @@ def register(app):
         mode = d.get("mode") if d.get("mode") in ("section", "edit") else "section"
         page = d.get("page") if d.get("page") in gen.VISUAL_PAGES else "landing"
         selected = str(d.get("selected_html") or "")[:12000]
-        model = str(d.get("model") or os.environ.get("OLLAMA_MODEL") or "llama3.1")
+        model = _pick_model(d.get("model"))
         if not prompt:
             return jsonify(error="Write what you want to create"), 400
         if mode == "edit" and not selected:
@@ -205,8 +316,8 @@ def register(app):
         try:
             html = clean_html(_chat(model, system, user))
         except Exception as e:
-            app.logger.exception("Ollama request failed")
-            return jsonify(error=f"Could not reach Ollama ({e}). Is `ollama serve` running and the model pulled?"), 502
+            app.logger.exception("AI request failed")
+            return jsonify(error=f"AI request failed: {e}"), 502
         if "<" not in html:
             return jsonify(error="The model did not return HTML. Try again or use a bigger model."), 502
         return jsonify(html=html, model=model)
