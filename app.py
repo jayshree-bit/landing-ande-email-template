@@ -251,7 +251,8 @@ def template_preview(kind, tid):
         abort(404)
     if kind == "email":
         html_body, leftover = gen.email_visual({"html": body, "css": css}, slug or "demo", ctx)
-        page = gen.env.get_template("email_visual.html").render(**ctx, visual_body=Markup(html_body), visual_css=Markup(leftover))
+        page = gen.env.get_template("email_visual.html").render(**ctx, visual_body=Markup(html_body), visual_css=Markup(leftover),
+                                                                 widget_css=Markup(gen.widget_assets("style.css", "email")))
     else:
         page = gen.env.get_template("landing.html" if kind == "landing" else "thankyou.html").render(
             **ctx, visual_body=Markup(gen.fill_blocks(body, ctx)), visual_css=Markup(css))
@@ -318,6 +319,14 @@ def _require(slug, page=None):
 def editor_bundle():
     """The editor's code, joined from static/editor/js and widgets/ (see generator.editor_bundle)."""
     return Response(gen.editor_bundle(), mimetype="application/javascript", headers={"Cache-Control": "no-cache"})
+
+
+@app.get("/editor-widgets/<kind>.css")
+def editor_widget_styles(kind):
+    """Widgets' style.css for the editor canvas (the email editor uses it; web pages get it through style.css)."""
+    if kind not in ("web", "email"):
+        abort(404)
+    return Response(gen.widget_assets("style.css", kind), mimetype="text/css", headers={"Cache-Control": "no-cache"})
 
 
 @app.get("/editor/<slug>")

@@ -27,6 +27,9 @@
     @media screen and (min-width:621px) { .lp-hide-desktop { display:none !important; } }
 {{ visual_css }}
   </style>
+  {% if widget_css %}<style>{# email widgets (widgets/email/*/style.css): a separate block, so a client that rejects one of these rules keeps the styles above #}
+{{ widget_css }}
+  </style>{% endif %}
 </head>
 <body style="margin:0;padding:0;background-color:{{ e.body_background_color or '#f1f5f9' }};">
   {% if e.preheader %}

@@ -12,7 +12,7 @@
   "layout": {},
   "lp": {
     "form_title": "Enter your email address to unlock this Signature Collection",
-    "submit_text": "REGISTER TO UNLOCKG",
+    "submit_text": "REGISTER TO UNLOCKfdsfsdfsd",
     "fields": [
       {
         "label": "Email",
@@ -101,5 +101,5 @@
     "email": true
   },
   "created_at": "2026-10-08T11:02:55.653744+00:00",
-  "updated_at": "2026-10-09T20:05:10.151007+00:00"
+  "updated_at": "2026-10-12T14:57:55.816962+00:00"
 }

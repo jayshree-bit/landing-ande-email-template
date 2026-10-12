@@ -1,0 +1,7 @@
+/* Phones: ☰ opens the links in mail apps that keep the checkbox (Apple Mail, iOS Mail). Where the checkbox is removed
+   (Gmail, Outlook) these first two rules match nothing, so the ☰ stays hidden and the links stay visible, one per line. */
+@media screen and (max-width: 620px) {
+  .em-nav-cb ~ .em-nav-burger { display: block !important; }
+  .em-nav-cb:not(:checked) ~ .em-nav-links { display: none !important; }
+  .em-nav-links a { display: block !important; padding: 10px 0 !important; border-top: 1px solid #e2e8f0 !important; }
+}

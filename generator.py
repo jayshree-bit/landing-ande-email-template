@@ -320,7 +320,8 @@ def build(slug, public_base):
             design = load_visual(slug, "email") if cfg["visual"].get("email") else None
             if design:
                 body, css = email_visual(design, slug, ctx)
-                render("email_visual.html", em / "email.html", visual_body=Markup(body), visual_css=Markup(css))
+                render("email_visual.html", em / "email.html", visual_body=Markup(body), visual_css=Markup(css),
+                       widget_css=Markup(widget_assets("style.css", "email")))
             else:
                 render("email.html", em / "email.html")
             render("email.txt", em / "email.txt")
@@ -342,9 +343,9 @@ def widget_files(name, kind="web"):
     return sorted((WIDGETS_DIR / kind).glob(f"*/{name}"))
 
 
-def widget_assets(name):
+def widget_assets(name, kind="web"):
     """All widgets' style.css or runtime.js, joined, each marked with its widget's folder."""
-    return "".join(f"\n/* widget: {p.parent.name} */\n{p.read_text(encoding='utf-8').strip()}\n" for p in widget_files(name))
+    return "".join(f"\n/* widget: {p.parent.name} */\n{p.read_text(encoding='utf-8').strip()}\n" for p in widget_files(name, kind))
 
 
 def render_asset(name, ctx):

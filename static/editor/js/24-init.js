@@ -72,9 +72,12 @@ function updateDevNote() {
   const note = $('#devnote');
   note.style.display = editor.getSelected() ? 'block' : 'none';
   note.className = dev === 'mobile' ? 'mobile' : '';
-  note.innerHTML = dev === 'desktop' ? 'Styling for <b>all screens</b>. Switch to Tablet or Mobile at the top to set styles for smaller screens only.'
+  note.innerHTML = dev === 'desktop' ? (IS_EMAIL ? 'Styling for <b>all screens</b>. Switch to Mobile at the top to set styles for phones only.'
+      : 'Styling for <b>all screens</b>. Switch to Tablet or Mobile at the top to set styles for smaller screens only.')
     : dev === 'tablet' ? 'Styling for <b>tablet and smaller</b> (up to 991px). Desktop is not affected.'
+    : IS_EMAIL ? `Styling for <b>phones only</b> (up to ${MOBILE_MAX}px). Desktop is not affected. Phone styles show in mail apps on phones (Apple Mail, Gmail app, Outlook app).`
     : `Styling for <b>mobile only</b> (up to ${MOBILE_MAX}px). Desktop and tablet are not affected.`;
+  note.innerHTML += '<span class="dev-legend">Click the screen icon next to any option to switch screens. <b class="k-set">Blue name</b> = set for this screen, <b class="k-inh">orange</b> = taken from a bigger screen, <b>×</b> removes it here.</span>';
 }
 
 async function init() {
@@ -109,7 +112,7 @@ async function init() {
     storageManager: false,
     panels: { defaults: [] },
     projectData: data.project || { pages: [{ component: data.seed || '' }] },
-    canvas: { styles: IS_EMAIL ? [`https://fonts.googleapis.com/css2?${GOOGLE_FONTS.map(f => 'family=' + encodeURIComponent(f).replace(/%20/g, '+') + ':wght@400;700').join('&')}&display=swap`] : [`/c/${SLUG}/landing-page/assets/style.css?v=${Date.now()}`, fonts] },
+    canvas: { styles: IS_EMAIL ? [`https://fonts.googleapis.com/css2?${GOOGLE_FONTS.map(f => 'family=' + encodeURIComponent(f).replace(/%20/g, '+') + ':wght@400;700').join('&')}&display=swap`, `/editor-widgets/email.css?v=${Date.now()}`] : [`/c/${SLUG}/landing-page/assets/style.css?v=${Date.now()}`, fonts] },
     canvasCss: CANVAS_CSS + pageWidgets().map(w => w.canvasCss || '').join(' '),
     plugins: [lpPlugin],
     blockManager: { appendTo: '#blocks' },
@@ -121,6 +124,7 @@ async function init() {
     assetManager: { upload: `/api/campaigns/${SLUG}/media`, uploadName: 'files', multiUpload: true, autoAdd: true },
     styleManager: {
       appendTo: '#styles',
+      highlightChanged: true, highlightComputed: true, clearProperties: true, // blue = set for this screen, orange = from a bigger screen, × resets
       sectors: [
         { name: 'Typography', open: true, properties: [
           { extend: 'font-family', options: FONT_OPTIONS }, 'font-size', 'font-weight', 'color', 'line-height', 'letter-spacing',
@@ -145,6 +149,7 @@ async function init() {
   editor.Commands.add('lp:add', { run(ed) { openAdd(ed.getSelected()); } });
   addBlocks(editor.BlockManager);
   setupNav();
+  pageWidgets().forEach(w => w.onLoad && editor.on('load', () => w.onLoad(editor)));
   fetch(`/api/campaigns/${SLUG}/media`).then(r => r.json()).then(d => editor.AssetManager.add(d.data || []));
 
   editor.on('load', () => {
@@ -202,6 +207,7 @@ async function init() {
   setupSpacing();
   setupLayout();
   setupShapes();
+  setupResponsive();
   editor.on('component:hover', c => { hoverSection = topSection(c); });
   editor.on('load', () => editor.Canvas.getDocument().addEventListener('mouseleave', () => { hoverSection = null; }));
   requestAnimationFrame(overlayLoop);

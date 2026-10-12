@@ -1,22 +1,81 @@
 // Nav menu: a row of links. The settings card (#navCard in editor.html) edits the links in place.
-    widget({
-      id: 'nav', label: 'Nav menu', category: 'Basic', order: 10,
-      tip: 'A row of menu links. Edit the links in the Layout tab after selecting it.',
-      content: () => navHtml(),
+// "On phones: Menu button" adds a real ☰ button next to the menu; on phones the links stay hidden until it is tapped.
+const BURGER_HTML = '<button type="button" class="lp-burger" aria-label="Menu" aria-expanded="false"><span></span><span></span><span></span></button>';
+widget({
+  id: 'nav', label: 'Nav menu', category: 'Basic', order: 10,
+  tip: 'A row of menu links. Edit the links in the Layout tab after selecting it.',
+  content: () => navHtml(),
+  // Clicking ☰ in the canvas opens / closes the menu, like on a phone. Capture phase: the editor stops clicks on elements.
+  onLoad(ed) {
+    ed.Canvas.getDocument().addEventListener('click', e => {
+      const btn = e.target.closest && e.target.closest('.lp-burger');
+      const nav = btn && btn.parentNode.querySelector(':scope > .lp-nav-burger');
+      if (!nav) return;
+      const open = !nav.classList.contains('lp-nav-open');
+      nav.classList.toggle('lp-nav-open', open);
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }, true);
+  },
+  types(ed) {
+    // The ☰ button: one piece (its three bars can't be selected), never a drop target.
+    ed.DomComponents.addType('lp-burger', {
+      isComponent: el => el.nodeType === 1 && el.classList && el.classList.contains('lp-burger'),
+      model: {
+        defaults: { name: 'Menu button ☰', droppable: false, editable: false, copyable: false },
+        init() { this.components().forEach(c => c.set({ selectable: false, hoverable: false, layerable: false, draggable: false })); },
+      },
     });
+  },
+});
 
-// The links inside the menu are the only record: the card edits them in place, so any style on a link is kept.
+const isBurger = c => !!c && c.getClasses && c.getClasses().includes('lp-burger');
+const burgerOf = menu => { const p = menu.parent(); return p ? p.components().find(c => isBurger(c)) : null; };
+// The menu a selection belongs to: the menu itself, a link in it, or its ☰ button.
 function navTarget(comp) {
-  for (let c = comp; c && c.get('type') !== 'wrapper'; c = c.parent()) if (c.getClasses().includes('lp-nav')) return c;
+  for (let c = comp; c && c.get('type') !== 'wrapper'; c = c.parent()) {
+    if (c.getClasses().includes('lp-nav')) return c;
+    if (isBurger(c)) return c.parent() && c.parent().components().find(x => x.getClasses().includes('lp-nav')) || null;
+  }
   return null;
+}
+function setBurger(menu, on) {
+  const btn = burgerOf(menu);
+  if (on) {
+    menu.addClass('lp-nav-burger');
+    if (!btn) menu.parent().components().add(BURGER_HTML, { at: menu.parent().components().indexOf(menu) });
+  } else {
+    menu.removeClass('lp-nav-burger');
+    if (btn) btn.remove();
+  }
+}
+// In the editor, clicking ☰ (or working on the menu) opens it like on a phone; clicking anything else closes it.
+// Only the canvas is changed, never the saved page.
+function previewBurgers(openMenu) {
+  const doc = editor.Canvas.getDocument();
+  if (!doc) return;
+  doc.querySelectorAll('.lp-nav-burger').forEach(el => {
+    const open = !!openMenu && el === openMenu.getEl();
+    el.classList.toggle('lp-nav-open', open);
+    const btn = el.parentNode && el.parentNode.querySelector(':scope > .lp-burger');
+    if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
 }
 const navLinks = menu => menu.components().filter(c => (c.get('tagName') || '').toLowerCase() === 'a');
 const linkText = link => (link.getEl() ? link.getEl().textContent : link.getInnerHTML().replace(/<[^>]*>/g, '')).trim();
 
 function renderNav() {
   const menu = navTarget(editor.getSelected());
+  // Working on the menu or a link keeps it open; the ☰ button toggles it (click handler in onLoad); anything else closes it.
+  // Checked once the selection has settled: a click first deselects the old element, then selects the new one.
+  setTimeout(() => {
+    const sel = editor.getSelected();
+    if (sel && isBurger(sel)) return;
+    const m = navTarget(sel);
+    previewBurgers(m && m.getClasses().includes('lp-nav-burger') ? m : null);
+  }, 0);
   $('#navCard').style.display = menu ? 'block' : 'none';
   if (!menu) return;
+  if (menu.getClasses().includes('lp-nav-burger') && !burgerOf(menu)) { setBurger(menu, true); markDirty(); } // menus set up before ☰ was a real button
   // Suggest the form and any element that has its own ID (set in Advanced) as places to jump to.
   const ids = ['form'];
   (function walk(c) { const id = c.get('attributes') && c.get('attributes').id; if (id && !ids.includes(id)) ids.push(id); c.components().forEach(walk); })(editor.getWrapper());
@@ -60,6 +119,7 @@ function renderNav() {
   const hover = editor.Css.getRule(`#${menu.getId()} a:hover`);
   set('navHover', toHex((hover && hover.getStyle().color) || META.primary || '#0b5cff'));
   $('#navUpper').checked = !!cs && cs.textTransform === 'uppercase';
+  $('#navMobile').value = menu.getClasses().includes('lp-nav-burger') ? 'burger' : '';
 }
 
 function moveNavLink(menu, link, to) {
@@ -75,6 +135,14 @@ function moveNavLink(menu, link, to) {
 
 function setupNav() {
   const menu = () => navTarget(editor.getSelected());
+  // Phones: a ☰ button that opens the links (runtime.js makes it work on the published page).
+  $('#navMobile').onchange = e => {
+    const m = menu();
+    if (!m) return;
+    setBurger(m, !!e.target.value);
+    markDirty();
+    renderNav();
+  };
   $('#navAdd').onclick = () => {
     const m = menu();
     if (!m) return;
@@ -99,105 +167,4 @@ function setupNav() {
     m.addAttributes({ id: m.getId() }); // keep the ID in the HTML so the hover rule still matches after saving
     markDirty();
   });
-}
-
-function renderCtaText() {
-  const sel = editor && editor.getSelected();
-  const target = ctaTarget(sel);
-  const card = $('#ctaTextCard');
-  card.style.display = target ? 'block' : 'none';
-  if (!target) return;
-  const c = ctaSettings(target);
-  if (document.activeElement !== $('#ctaTextInput')) $('#ctaTextInput').value = c.text;
-  if (document.activeElement !== $('#ctaLinkInput')) $('#ctaLinkInput').value = c.url;
-  if (document.activeElement !== $('#ctaFontInput')) $('#ctaFontInput').value = c.font;
-  loadCtaGoogleFont(c.font);
-}
-
-function buttonTarget(comp) {
-  if (!comp) return null;
-  const isButton = link => {
-    const style = { ...link.getAttributes(), ...link.getStyle() };
-    return (link.get('tagName') || '').toLowerCase() === 'a' &&
-      (link.getClasses().includes('lp-btn') || style.display === 'inline-block' || link.getAttributes().role === 'button');
-  };
-  for (let target = comp; target && target.get('type') !== 'wrapper'; target = target.parent()) {
-    if (isButton(target)) return target;
-  }
-  const buttons = comp.find('a').filter(isButton);
-  return buttons.length === 1 ? buttons[0] : null;
-}
-
-function renderButtonSettings() {
-  const target = buttonTarget(editor && editor.getSelected());
-  const card = $('#buttonSettingsCard');
-  card.style.display = target ? 'block' : 'none';
-  if (!target) return;
-  if (document.activeElement !== $('#buttonTextInput')) {
-    $('#buttonTextInput').value = target.getEl()?.textContent.trim() || '';
-  }
-  if (document.activeElement !== $('#buttonLinkInput')) {
-    $('#buttonLinkInput').value = target.getAttributes().href || '';
-  }
-  if (document.activeElement !== $('#buttonFontInput')) {
-    $('#buttonFontInput').value = fontFromStack(target.getStyle()['font-family'] || '');
-  }
-}
-
-function updateButtonText(target, text) {
-  const textNode = target.components().models.find(component => component.get('type') === 'textnode');
-  if (textNode) textNode.set('content', text);
-  else target.components().reset([{ type: 'textnode', content: text }]);
-  if (target.view) target.view.render();
-}
-
-function ctaFontStack(font) {
-  return GOOGLE_FONTS.includes(font) ? `'${font}',Arial,Helvetica,sans-serif` : 'Arial,Helvetica,sans-serif';
-}
-
-function fontFromStack(stack) {
-  return GOOGLE_FONTS.find(font => String(stack || '').includes(font)) || '';
-}
-
-function loadCtaGoogleFont(font) {
-  if (!editor) return;
-  const doc = editor.Canvas.getDocument();
-  if (!doc) return;
-  const id = 'lp-cta-google-font';
-  let link = doc.getElementById(id);
-  if (!GOOGLE_FONTS.includes(font)) { if (link) link.remove(); return; }
-  if (!link) { link = doc.createElement('link'); link.id = id; link.rel = 'stylesheet'; doc.head.appendChild(link); }
-  link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(font).replace(/%20/g, '+')}:wght@400;700&display=swap`;
-}
-
-const CTA_KEYS = ['email-cta', 'email-cta-signature', 'email-footer-signature'];
-
-// The CTA button a selection refers to: the button block itself, or the cell/row around exactly one button.
-function ctaTarget(comp) {
-  if (!IS_EMAIL || !comp) return null;
-  const isCta = c => c && CTA_KEYS.includes((c.getAttributes() || {})['data-lp-block']);
-  if (isCta(comp)) return comp;
-  const inside = comp.find('[data-lp-block]').filter(isCta);
-  if (inside.length === 1) return inside[0];
-  return null;
-}
-
-// Each CTA button keeps its own text / link / font on its placeholder (data-cta-*), so two buttons can differ.
-function ctaSettings(comp) {
-  const a = (comp && comp.getAttributes()) || {};
-  return {
-    text: a['data-cta-text'] != null ? a['data-cta-text'] : (META.cta_text || 'Download Now'),
-    url: a['data-cta-url'] != null ? a['data-cta-url'] : (META.cta_url || META.lp_url || ''),
-    font: a['data-cta-font'] != null ? a['data-cta-font'] : (META.cta_font || ''),
-  };
-}
-
-function applyCtaToHtml(source, text, url, font) {
-  return source.replace(/(<a\b[^>]*>)[\s\S]*?(<\/a>)/i, (m, open, close) => `${open}${esc(text)}${close}`)
-    .replace(/(<a\b[^>]*\bhref=")[^"]*("[^>]*>)/i, (m, a, b) => `${a}${esc(url || META.lp_url || '#')}${b}`)
-    .replace(/font-family:[^;"']*(?:'[^']*'[^;"']*)?/gi, `font-family:${ctaFontStack(font)}`);
-}
-
-function updateCtaPreview(comp) {
-  if (comp && comp.view) comp.view.render();
 }

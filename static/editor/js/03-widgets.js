@@ -16,6 +16,7 @@
  *     onSelect(c) {},             // optional: runs when the user selects something inside it
  *     canvasCss: '…',             // optional: CSS used only inside the editor canvas
  *     types(ed) {},               // optional: register GrapesJS component types (ed.DomComponents.addType)
+ *     onLoad(ed) {},              // optional: runs once the canvas has loaded (e.g. click handlers inside the page)
  *   });
  *
  * Published look and behaviour go next to widget.js: style.css is added to the page stylesheet and runtime.js to the
