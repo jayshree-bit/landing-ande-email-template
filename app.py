@@ -648,7 +648,8 @@ def send_lead_emails(cfg, record, base):
                 s.send_message(m)
     except Exception:
         app.logger.exception("Failed to send lead emails")
-
+import ai_assistant
+ai_assistant.register(app)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5050)), debug=True)
